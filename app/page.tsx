@@ -1,41 +1,59 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 
 export default function GamePage() {
   const gameContainerRef = useRef<HTMLDivElement>(null)
   const gameInstanceRef = useRef<any>(null)
+  const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
     // Initialize game when component mounts
-    if (typeof window !== "undefined" && gameContainerRef.current) {
+    if (typeof window !== "undefined" && gameContainerRef.current && !isInitialized) {
       initializeGame()
+      setIsInitialized(true)
     }
 
     return () => {
       // Cleanup game instance
       if (gameInstanceRef.current) {
         gameInstanceRef.current.destroy(true)
+        gameInstanceRef.current = null
       }
     }
-  }, [])
+  }, [isInitialized])
 
   const initializeGame = async () => {
-    // Dynamic import to avoid SSR issues
-    const { GameManager } = await import("@/lib/game/GameManager")
+    try {
+      // Dynamic import to avoid SSR issues
+      const { GameManager } = await import("@/lib/game/GameManager")
 
-    if (gameContainerRef.current) {
-      gameInstanceRef.current = new GameManager(gameContainerRef.current)
-      await gameInstanceRef.current.initialize()
+      if (gameContainerRef.current && !gameInstanceRef.current) {
+        gameInstanceRef.current = new GameManager(gameContainerRef.current)
+        await gameInstanceRef.current.initialize()
+      }
+    } catch (error) {
+      console.error("Failed to initialize game:", error)
     }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-400 to-green-400">
       {/* Game Container */}
-      <div ref={gameContainerRef} id="game-container" className="w-full h-screen relative" />
+      <div 
+        ref={gameContainerRef} 
+        id="game-container" 
+        className="w-full h-screen relative touch-none select-none"
+        style={{
+          touchAction: 'none',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          WebkitTouchCallout: 'none',
+          WebkitTapHighlightColor: 'transparent'
+        }}
+      />
 
       {/* Loading Screen */}
       <div id="loading-screen" className="absolute inset-0 bg-background flex items-center justify-center z-50">
@@ -48,28 +66,37 @@ export default function GamePage() {
         </Card>
       </div>
 
-      {/* Game UI Overlay */}
-      <div id="game-ui" className="absolute inset-0 pointer-events-none z-40">
-        {/* Top HUD */}
-        <div className="absolute top-4 left-4 right-4 flex justify-between pointer-events-auto">
-          <Button variant="outline" size="sm" className="bg-background/80 backdrop-blur">
-            背包
-          </Button>
-          <Button variant="outline" size="sm" className="bg-background/80 backdrop-blur">
-            设置
-          </Button>
-        </div>
-
-        {/* Bottom HUD */}
-        <div className="absolute bottom-4 left-4 right-4 flex justify-center pointer-events-auto">
-          <div className="flex gap-2">
-            <Button className="bg-primary/90 backdrop-blur">探索AR</Button>
-            <Button variant="outline" className="bg-background/80 backdrop-blur">
-              地图
-            </Button>
-          </div>
-        </div>
-      </div>
+      {/* Mobile-specific styles */}
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          body {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+          }
+          
+          #game-container {
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+          }
+          
+          #game-container canvas {
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+          }
+        }
+      `}</style>
     </div>
   )
 }

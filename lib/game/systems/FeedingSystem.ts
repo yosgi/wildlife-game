@@ -51,7 +51,8 @@ export class FeedingSystem {
     const container = this.scene.add.container(x, y)
 
     // Background panel
-    const bg = this.scene.add.rectangle(0, 0, 300, 400, 0x000000, 0.9).setStroke(0x4caf50, 3)
+    const bg = this.scene.add.rectangle(0, 0, 300, 400, 0x000000, 0.9)
+    const bgBorder = this.scene.add.rectangle(0, 0, 300, 400).setStrokeStyle(3, 0x4caf50)
 
     // Title
     const title = this.scene.add
@@ -78,7 +79,8 @@ export class FeedingSystem {
     // Feeding zone
     this.feedingZone = this.scene.add.zone(0, 80, 200, 100).setRectangleDropZone(200, 100).setData("animal", animal)
 
-    const feedingZoneBg = this.scene.add.rectangle(0, 80, 200, 100, 0x4caf50, 0.2).setStroke(0x4caf50, 2, 1)
+    const feedingZoneBg = this.scene.add.rectangle(0, 80, 200, 100, 0x4caf50, 0.2)
+    const feedingZoneBorder = this.scene.add.rectangle(0, 80, 200, 100).setStrokeStyle(2, 0x4caf50)
 
     const feedingZoneText = this.scene.add
       .text(0, 80, "拖拽食物到这里", {
@@ -100,7 +102,7 @@ export class FeedingSystem {
         this.closeFeedingInterface(container)
       })
 
-    container.add([bg, title, dietText, foodContainer, feedingZoneBg, feedingZoneText, closeButton])
+    container.add([bg, bgBorder, title, dietText, foodContainer, feedingZoneBg, feedingZoneBorder, feedingZoneText, closeButton])
 
     // Setup drop zone events
     this.setupDropZoneEvents()
@@ -298,7 +300,11 @@ export class FeedingSystem {
     // Result background
     const resultBg = this.scene.add
       .rectangle(centerX, centerY, 300, 100, 0x000000, 0.9)
-      .setStroke(result.success ? 0x4caf50 : 0xff4444, 2)
+      .setDepth(100)
+    
+    const resultBorder = this.scene.add
+      .rectangle(centerX, centerY, 300, 100)
+      .setStrokeStyle(2, result.success ? 0x4caf50 : 0xff4444)
       .setDepth(100)
 
     // Result text
@@ -338,11 +344,12 @@ export class FeedingSystem {
     // Auto-hide result
     this.scene.time.delayedCall(2000, () => {
       this.scene.tweens.add({
-        targets: [resultBg, resultText],
+        targets: [resultBg, resultBorder, resultText],
         alpha: 0,
         duration: 500,
         onComplete: () => {
           resultBg.destroy()
+          resultBorder.destroy()
           resultText.destroy()
         },
       })

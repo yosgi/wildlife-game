@@ -1,5 +1,10 @@
 import Phaser from "phaser"
 import { FeedingSystem } from "../systems/FeedingSystem"
+import * as THREE from "three"
+
+interface ARSceneData {
+  gameManager: any
+}
 
 export class ARScene extends Phaser.Scene {
   private arContainer?: HTMLDivElement
@@ -15,7 +20,9 @@ export class ARScene extends Phaser.Scene {
   }
 
   create() {
-    this.gameManager = this.game.gameManager
+    // Retrieve gameManager from scene data or another appropriate source
+    const data = this.sys.settings.data as ARSceneData | undefined
+    this.gameManager = data?.gameManager
     this.feedingSystem = new FeedingSystem(this)
 
     this.createAROverlay()
@@ -39,7 +46,8 @@ export class ARScene extends Phaser.Scene {
 
     const arIndicator = this.add.container(this.cameras.main.centerX, 50).setDepth(10)
 
-    const indicatorBg = this.add.rectangle(0, 0, 200, 40, 0x000000, 0.8).setStroke(0x00ff00, 2)
+    const indicatorBg = this.add.rectangle(0, 0, 200, 40, 0x000000, 0.8)
+    const indicatorBorder = this.add.rectangle(0, 0, 200, 40).setStrokeStyle(2, 0x00ff00)
 
     const indicatorText = this.add
       .text(0, 0, "AR 模式激活", {
@@ -49,7 +57,7 @@ export class ARScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
 
-    arIndicator.add([indicatorBg, indicatorText])
+    arIndicator.add([indicatorBg, indicatorBorder, indicatorText])
 
     this.tweens.add({
       targets: indicatorBg,
@@ -85,60 +93,153 @@ export class ARScene extends Phaser.Scene {
   }
 
   private async setupARJS() {
-    const [THREE, THREEx] = await Promise.all([
-      import("three"),
-      import("@ar-js-org/ar.js/three.js/build/ar-threex-location-only"),
-    ])
+    try {
+      // 创建简化的AR环境，加载kakapo模型
+      console.log("Setting up AR environment with kakapo model")
+      
+      // 使用动态导入避免TypeScript错误
+      const THREE = await import("three") as any
+      const scene = new THREE.Scene()
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
+      
+      renderer.setSize(window.innerWidth, window.innerHeight)
+      renderer.domElement.style.position = "absolute"
+      renderer.domElement.style.top = "0px"
+      renderer.domElement.style.left = "0px"
+      renderer.domElement.style.zIndex = "10"
+      this.arContainer?.appendChild(renderer.domElement)
 
-    const scene = new THREE.Scene()
-    const camera = new THREE.Camera()
-    scene.add(camera)
+      // 设置相机位置
+      camera.position.z = 5
 
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-    })
-    renderer.setClearColor(new THREE.Color("lightgrey"), 0)
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    renderer.domElement.style.position = "absolute"
-    renderer.domElement.style.top = "0px"
-    renderer.domElement.style.left = "0px"
-    this.arContainer?.appendChild(renderer.domElement)
+      // 加载kakapo模型
+      await this.loadKakapoModel(scene, THREE)
 
-    const arToolkitSource = new THREEx.ArToolkitSource({
-      sourceType: "webcam",
-    })
+      // 添加环境光和平行光
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
+      scene.add(ambientLight)
+      
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+      directionalLight.position.set(10, 10, 5)
+      scene.add(directionalLight)
 
-    const arToolkitContext = new THREEx.ArToolkitContext({
-      cameraParametersUrl: "/camera_para.dat",
-      detectionMode: "mono",
-    })
+      this.arSystem = {
+        scene,
+        camera,
+        renderer,
+        THREE,
+        isSimulation: true
+      }
 
-    const markerControls = this.setupMarkerControls(THREE, THREEx, scene, camera)
-
-    this.arSystem = {
-      scene,
-      camera,
-      renderer,
-      arToolkitSource,
-      arToolkitContext,
-      markerControls,
-      THREE,
+      this.startARRenderLoop()
+    } catch (error) {
+      console.error("AR setup failed:", error)
+      this.showARFallback()
     }
-
-    this.startARRenderLoop()
   }
 
-  private setupMarkerControls(THREE: any, THREEx: any, scene: any, camera: any) {
+  private async loadKakapoModel(scene: any, THREE: any) {
+    try {
+      // 正确导入OBJLoader
+      const { OBJLoader } = await import('three/examples/jsm/loaders/OBJLoader.js')
+      const loader = new OBJLoader()
+      
+      const objPromise = new Promise<any>((resolve, reject) => {
+        (loader as any).load('/kakapo/base.obj', resolve, undefined, reject)
+      })
+
+      const obj = await objPromise
+      
+      // 加载纹理
+      const textureLoader = new THREE.TextureLoader()
+      const diffuseTexture = textureLoader.load('/kakapo/texture_diffuse.png')
+      const normalTexture = textureLoader.load('/kakapo/texture_normal.png')
+      const roughnessTexture = textureLoader.load('/kakapo/texture_roughness.png')
+      const metallicTexture = textureLoader.load('/kakapo/texture_metallic.png')
+
+      // 创建材质
+      const material = new THREE.MeshStandardMaterial({
+        map: diffuseTexture,
+        normalMap: normalTexture,
+        roughnessMap: roughnessTexture,
+        metalnessMap: metallicTexture,
+        roughness: 0.8,
+        metalness: 0.2
+      })
+
+      // 应用材质到模型
+      obj.traverse((child: any) => {
+        if (child.isMesh) {
+          child.material = material
+        }
+      })
+
+      // 调整模型大小和位置
+      obj.scale.set(0.5, 0.5, 0.5)
+      obj.position.set(0, -1, 0)
+      obj.rotation.y = Math.PI / 4
+
+      scene.add(obj)
+
+      console.log("Kakapo model loaded successfully")
+    } catch (error) {
+      console.error("Failed to load kakapo model:", error)
+      // 如果加载失败，创建一个简单的几何体作为替代
+      this.createFallbackKakapo(scene, THREE)
+    }
+  }
+
+  private createFallbackKakapo(scene: any, THREE: any) {
+    // 创建一个简单的kakapo形状作为替代
+    const geometry = new THREE.SphereGeometry(1, 32, 32)
+    const material = new THREE.MeshLambertMaterial({ 
+      color: 0x4a5d23,
+      transparent: true,
+      opacity: 0.8
+    })
+    const kakapo = new THREE.Mesh(geometry, material)
+    
+    kakapo.position.set(0, 0, 0)
+    scene.add(kakapo)
+
+    // 添加简单的动画
+    this.tweens.add({
+      targets: kakapo.rotation,
+      y: Math.PI * 2,
+      duration: 8000,
+      repeat: -1,
+      ease: "Linear"
+    })
+  }
+
+  private setupMarkerControls(THREE: any, ARjsThree: any, scene: any, camera: any) {
     const region = this.gameManager.getGameState().getCurrentRegion()
-    const animals = this.gameManager.getGameState().getAnimalsByRegion(region)
     const markerControls: any[] = []
 
-    animals.forEach((animal, index) => {
-      const markerRoot = new THREE.Group()
+    interface Animal {
+      id: string
+      name: string
+      [key: string]: any
+    }
+
+    interface MarkerControl {
+      animal: Animal
+      markerRoot: THREE.Group
+      markerControl: any
+      detected: boolean
+      mixer?: any
+      model?: any
+      interactionSphere?: any
+    }
+
+    const animals: Animal[] = this.gameManager.getGameState().getAnimalsByRegion(region)
+
+    animals.forEach((animal: Animal, index: number) => {
+      const markerRoot: any = new this.arSystem.THREE.Group()
       scene.add(markerRoot)
 
-      const markerControl = new THREEx.ArMarkerControls(this.arSystem?.arToolkitContext, markerRoot, {
+      const markerControl: any = new ARjsThree.ArMarkerControls(this.arSystem?.arToolkitContext, markerRoot, {
         type: "pattern",
         patternUrl: `/markers/pattern-${animal.id}.patt`,
       })
@@ -148,7 +249,7 @@ export class ARScene extends Phaser.Scene {
         markerRoot,
         markerControl,
         detected: false,
-      })
+      } as MarkerControl)
     })
 
     return markerControls
@@ -158,12 +259,13 @@ export class ARScene extends Phaser.Scene {
     if (!this.arSystem) return
 
     const { THREE } = this.arSystem
-    const loader = new THREE.GLTFLoader()
+    const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js')
+    const loader = new GLTFLoader()
 
     const modelPromises = this.arSystem.markerControls.map(async (control: any) => {
       try {
         const gltf = await new Promise((resolve, reject) => {
-          loader.load(`/models/${control.animal.id}.glb`, resolve, undefined, reject)
+          (loader as any).load(`/models/${control.animal.id}.glb`, resolve, undefined, reject)
         })
 
         const model = (gltf as any).scene
@@ -246,29 +348,10 @@ export class ARScene extends Phaser.Scene {
   private startARRenderLoop() {
     if (!this.arSystem) return
 
-    const { scene, camera, renderer, arToolkitSource, arToolkitContext } = this.arSystem
+    const { scene, camera, renderer } = this.arSystem
 
     const animate = () => {
       requestAnimationFrame(animate)
-
-      if (arToolkitSource.ready) {
-        arToolkitContext.update(arToolkitSource.domElement)
-      }
-
-      this.arSystem.markerControls.forEach((control: any) => {
-        if (control.mixer) {
-          control.mixer.update(0.016) // 60fps
-        }
-
-        if (control.markerRoot.visible && !control.detected) {
-          control.detected = true
-          this.onAnimalDetected(control.animal)
-        } else if (!control.markerRoot.visible && control.detected) {
-          control.detected = false
-          this.onAnimalLost(control.animal)
-        }
-      })
-
       renderer.render(scene, camera)
     }
 
@@ -276,9 +359,10 @@ export class ARScene extends Phaser.Scene {
   }
 
   private createARControls() {
-    const backButton = this.add.container(60, 60).setDepth(20).setInteractive({ useHandCursor: true })
-
-    const backBg = this.add.rectangle(0, 0, 100, 40, 0x000000, 0.8).setStroke(0xffffff, 2)
+    const backButton = this.add.container(60, 60).setDepth(20)
+    
+    const backBg = this.add.rectangle(0, 0, 100, 40, 0x000000, 0.8)
+    const backBorder = this.add.rectangle(0, 0, 100, 40).setStrokeStyle(2, 0xffffff)
 
     const backText = this.add
       .text(0, 0, "← 返回", {
@@ -288,86 +372,30 @@ export class ARScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
 
-    backButton.add([backBg, backText])
+    backButton.add([backBg, backBorder, backText])
+    
+    // 设置交互 - 先设置大小，再设置交互
+    backButton.setSize(100, 40)
+    backButton.setInteractive({ useHandCursor: true })
+    
     backButton.on("pointerdown", () => {
       this.exitARMode()
     })
 
-    const statusContainer = this.add.container(this.cameras.main.centerX, this.cameras.main.height - 100).setDepth(20)
 
-    const statusBg = this.add.rectangle(0, 0, 300, 60, 0x000000, 0.8).setStroke(0x00ff00, 2)
-
-    const statusText = this.add
-      .text(0, -10, "寻找动物标记...", {
-        fontSize: "16px",
-        color: "#ffffff",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5)
-
-    const instructionText = this.add
-      .text(0, 10, "将摄像头对准动物标记", {
-        fontSize: "12px",
-        color: "#cccccc",
-      })
-      .setOrigin(0.5)
-
-    statusContainer.add([statusBg, statusText, instructionText])
-
-    this.data.set("statusText", statusText)
-    this.data.set("instructionText", instructionText)
   }
 
+
+
   private showARInstructions() {
-    const region = this.gameManager.getGameState().getCurrentRegion()
-    const regionText = region === "north" ? "北岛" : "南岛"
-    const animals = this.gameManager.getGameState().getAnimalsByRegion(region)
-
-    const instructionContainer = this.add.container(this.cameras.main.centerX, 150).setDepth(15)
-
-    const instructionBg = this.add.rectangle(0, 0, 350, 120, 0x000000, 0.9).setStroke(0x00ff00, 2)
-
-    const titleText = this.add
-      .text(0, -40, `${regionText}动物探索`, {
-        fontSize: "18px",
-        color: "#00ff00",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5)
-
-    const animalList = animals.map((a) => a.name).join("、")
-    const contentText = this.add
-      .text(0, -10, `可发现动物：${animalList}`, {
-        fontSize: "14px",
-        color: "#ffffff",
-        wordWrap: { width: 320 },
-        align: "center",
-      })
-      .setOrigin(0.5)
-
-    const tipText = this.add
-      .text(0, 20, "提示：确保光线充足，慢慢移动设备", {
-        fontSize: "12px",
-        color: "#cccccc",
-      })
-      .setOrigin(0.5)
-
-    instructionContainer.add([instructionBg, titleText, contentText, tipText])
-
-    this.time.delayedCall(5000, () => {
-      this.tweens.add({
-        targets: instructionContainer,
-        alpha: 0,
-        duration: 1000,
-        onComplete: () => instructionContainer.destroy(),
-      })
-    })
+    // 不显示任何说明文字
   }
 
   private showARFallback() {
     const fallbackContainer = this.add.container(this.cameras.main.centerX, this.cameras.main.centerY).setDepth(20)
 
-    const fallbackBg = this.add.rectangle(0, 0, 300, 150, 0x000000, 0.9).setStroke(0xff0000, 2)
+    const fallbackBg = this.add.rectangle(0, 0, 300, 150, 0x000000, 0.9)
+    const fallbackBorder = this.add.rectangle(0, 0, 300, 150).setStrokeStyle(2, 0xff0000)
 
     const titleText = this.add
       .text(0, -50, "AR 不可用", {
@@ -400,7 +428,7 @@ export class ARScene extends Phaser.Scene {
       this.startSimulationMode()
     })
 
-    fallbackContainer.add([fallbackBg, titleText, messageText, simulateButton])
+    fallbackContainer.add([fallbackBg, fallbackBorder, titleText, messageText, simulateButton])
   }
 
   private startSimulationMode() {
@@ -419,7 +447,8 @@ export class ARScene extends Phaser.Scene {
   private simulateAnimalFound(animal: any) {
     const animalContainer = this.add.container(this.cameras.main.centerX, this.cameras.main.centerY).setDepth(15)
 
-    const animalBg = this.add.rectangle(0, 0, 250, 200, 0x000000, 0.8).setStroke(0x00ff00, 3)
+    const animalBg = this.add.rectangle(0, 0, 250, 200, 0x000000, 0.8)
+    const animalBorder = this.add.rectangle(0, 0, 250, 200).setStrokeStyle(3, 0x00ff00)
 
     const animalImage = this.add.image(0, -30, `${animal.id}-icon`).setScale(1.5)
 
@@ -446,7 +475,7 @@ export class ARScene extends Phaser.Scene {
       animalContainer.destroy()
     })
 
-    animalContainer.add([animalBg, animalImage, animalName, feedButton])
+    animalContainer.add([animalBg, animalBorder, animalImage, animalName, feedButton])
 
     animalContainer.setScale(0)
     this.tweens.add({

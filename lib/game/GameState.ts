@@ -2,7 +2,7 @@ export interface Animal {
   id: string
   name: string
   species: string
-  region: "north" | "south"
+  region: "north" | "south" | "both"
   habitat: string
   diet: string[]
   conservationStatus: string

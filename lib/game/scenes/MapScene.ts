@@ -4,9 +4,9 @@ export class MapScene extends Phaser.Scene {
   private northIsland?: Phaser.GameObjects.Image
   private southIsland?: Phaser.GameObjects.Image
   private gameManager: any
-  private animalMarkers: Phaser.GameObjects.Group
-  private clouds: Phaser.GameObjects.Group
-  private waves: Phaser.GameObjects.Group
+  private animalMarkers!: Phaser.GameObjects.Group
+  private clouds!: Phaser.GameObjects.Group
+  private waves!: Phaser.GameObjects.Group
   private infoPanel?: Phaser.GameObjects.Container
   private selectedRegion: "north" | "south" | null = null
 
@@ -36,7 +36,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   create() {
-    this.gameManager = this.game.gameManager
+    this.gameManager = this.registry.get("gameManager")
 
     this.createAnimatedBackground()
 
@@ -46,10 +46,11 @@ export class MapScene extends Phaser.Scene {
 
     this.createEnvironmentalElements()
 
-    // Add enhanced title with pixel font styling
+    // Add enhanced title with pixel font styling - 移动端适配
+    const titleSize = this.cameras.main.width < 768 ? "28px" : "36px"
     const titleText = this.add
-      .text(this.cameras.main.centerX, 60, "新西兰动物探险", {
-        fontSize: "36px",
+      .text(this.cameras.main.centerX, this.cameras.main.width < 768 ? 40 : 60, "新西兰动物探险", {
+        fontSize: titleSize,
         color: "#ffffff",
         fontStyle: "bold",
         stroke: "#000000",
@@ -57,6 +58,9 @@ export class MapScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setDepth(10)
+
+    // 添加返回主菜单按钮
+    this.createBackButton()
 
     this.tweens.add({
       targets: titleText,
@@ -75,18 +79,81 @@ export class MapScene extends Phaser.Scene {
 
     this.createAnimalHabitats()
 
-    this.createLegend()
-
-    // Add enhanced instructions
+    // Add enhanced instructions - 移动端适配
+    const instructionSize = this.cameras.main.width < 768 ? "16px" : "20px"
     this.add
-      .text(this.cameras.main.centerX, this.cameras.main.height - 80, "点击岛屿探索动物栖息地", {
-        fontSize: "20px",
+      .text(this.cameras.main.centerX, this.cameras.main.height - (this.cameras.main.width < 768 ? 60 : 80), "选择岛屿开始你的新西兰动物探险之旅", {
+        fontSize: instructionSize,
         color: "#ffffff",
         stroke: "#000000",
         strokeThickness: 2,
       })
       .setOrigin(0.5)
       .setDepth(10)
+  }
+
+  private createBackButton() {
+    // 创建返回主菜单按钮 - 移动端适配
+    const isMobile = this.cameras.main.width < 768
+    const buttonX = isMobile ? 60 : 80
+    const buttonY = isMobile ? 40 : 60
+    const buttonWidth = isMobile ? 100 : 120
+    const buttonHeight = isMobile ? 35 : 40
+    const fontSize = isMobile ? "14px" : "16px"
+    
+    const backButton = this.add.container(buttonX, buttonY).setDepth(20)
+    
+    // 按钮背景
+    const buttonBg = this.add.rectangle(0, 0, buttonWidth, buttonHeight, 0x4caf50, 0.9)
+    const buttonBorder = this.add.rectangle(0, 0, buttonWidth, buttonHeight, 0x000000, 0)
+    buttonBorder.setStrokeStyle(2, 0x2e7d32)
+    
+    // 按钮文字
+    const buttonText = this.add.text(0, 0, "← 主菜单", {
+      fontSize: fontSize,
+      color: "#000000",
+      fontStyle: "bold"
+    }).setOrigin(0.5)
+    
+    backButton.add([buttonBg, buttonBorder, buttonText])
+    
+    // 设置交互 - 移动端增加点击区域
+    const hitAreaWidth = isMobile ? buttonWidth + 10 : buttonWidth
+    const hitAreaHeight = isMobile ? buttonHeight + 10 : buttonHeight
+    backButton.setSize(hitAreaWidth, hitAreaHeight)
+    backButton.setInteractive({ useHandCursor: true })
+    
+    // 悬停效果
+    backButton.on("pointerover", () => {
+      this.tweens.add({
+        targets: backButton,
+        scaleX: 1.1,
+        scaleY: 1.1,
+        duration: 200,
+        ease: "Power2"
+      })
+      buttonBg.setFillStyle(0x66bb6a, 1)
+    })
+    
+    backButton.on("pointerout", () => {
+      this.tweens.add({
+        targets: backButton,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 200,
+        ease: "Power2"
+      })
+      buttonBg.setFillStyle(0x4caf50, 0.9)
+    })
+    
+    // 点击事件
+    backButton.on("pointerdown", () => {
+      // 移动端添加触觉反馈
+      if ('vibrate' in navigator) {
+        navigator.vibrate(30)
+      }
+      this.scene.start("MainMenuScene")
+    })
   }
 
   private createAnimatedBackground() {
@@ -99,33 +166,13 @@ export class MapScene extends Phaser.Scene {
         0x87ceeb,
       )
       .setDepth(-3)
-
-    const bg2 = this.add
-      .rectangle(
-        this.cameras.main.centerX,
-        this.cameras.main.centerY + 200,
-        this.cameras.main.width,
-        this.cameras.main.height / 2,
-        0x4682b4,
-      )
-      .setDepth(-2)
-      .setAlpha(0.3)
-
-    this.tweens.add({
-      targets: bg2,
-      alpha: 0.6,
-      duration: 4000,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-    })
   }
 
   private createEnvironmentalElements() {
     for (let i = 0; i < 5; i++) {
       const cloud = this.add
         .image(Phaser.Math.Between(0, this.cameras.main.width), Phaser.Math.Between(50, 200), "cloud")
-        .setScale(0.5)
+        .setScale(0.1)
         .setAlpha(0.7)
         .setDepth(5)
 
@@ -151,18 +198,17 @@ export class MapScene extends Phaser.Scene {
           this.cameras.main.centerY + Phaser.Math.Between(100, 200),
           "wave",
         )
-        .setScale(0.3)
+        .setScale(0.05)
         .setAlpha(0.5)
         .setDepth(1)
 
       this.waves.add(wave)
 
+      // 水波左右来回移动
       this.tweens.add({
         targets: wave,
-        scaleX: 0.4,
-        scaleY: 0.4,
-        alpha: 0.8,
-        duration: 2000,
+        x: wave.x + Phaser.Math.Between(-50, 50),
+        duration: Phaser.Math.Between(3000, 6000),
         yoyo: true,
         repeat: -1,
         ease: "Sine.easeInOut",
@@ -174,201 +220,216 @@ export class MapScene extends Phaser.Scene {
     const centerX = this.cameras.main.centerX
     const centerY = this.cameras.main.centerY
 
-    this.northIsland = this.add
-      .image(centerX - 120, centerY - 60, "north-island")
+    // 创建整个新西兰地图作为背景
+    const fullMap = this.add
+      .image(centerX, centerY, "north-island") // 使用其中一个作为完整地图
+      .setScale(1.2)
+      .setDepth(2)
+      .setAlpha(0.8)
+
+    // 创建北岛选择区域
+    const northButton = this.add
+      .rectangle(centerX - 80, centerY - 40, 160, 80, 0x4caf50, 0.7)
+      .setStrokeStyle(3, 0xffffff)
       .setInteractive({ useHandCursor: true })
-      .setScale(0.9)
       .setDepth(3)
 
-    const northGlow = this.add.circle(centerX - 120, centerY - 60, 80, 0xffffff, 0.1).setDepth(2)
+    const northGlow = this.add.circle(centerX - 80, centerY - 40, 85, 0x4caf50, 0.1).setDepth(2)
 
-    this.northIsland.on("pointerdown", () => {
+    northButton.on("pointerdown", () => {
       this.selectRegion("north")
     })
 
-    this.northIsland.on("pointerover", () => {
-      this.northIsland?.setTint(0xdddddd)
+    northButton.on("pointerover", () => {
       this.tweens.add({
-        targets: northGlow,
-        alpha: 0.3,
-        duration: 300,
+        targets: [northButton, northGlow],
+        alpha: 0.9,
+        scaleX: 1.1,
+        scaleY: 1.1,
+        duration: 200,
       })
       this.showRegionInfo("north")
     })
 
-    this.northIsland.on("pointerout", () => {
-      this.northIsland?.clearTint()
+    northButton.on("pointerout", () => {
       this.tweens.add({
-        targets: northGlow,
-        alpha: 0.1,
-        duration: 300,
+        targets: [northButton, northGlow],
+        alpha: 0.7,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 200,
       })
       this.hideRegionInfo()
     })
 
-    this.southIsland = this.add
-      .image(centerX + 120, centerY + 60, "south-island")
+    // 创建南岛选择区域
+    const southButton = this.add
+      .rectangle(centerX + 80, centerY + 60, 160, 100, 0x2196f3, 0.7)
+      .setStrokeStyle(3, 0xffffff)
       .setInteractive({ useHandCursor: true })
-      .setScale(0.9)
       .setDepth(3)
 
-    const southGlow = this.add.circle(centerX + 120, centerY + 60, 80, 0xffffff, 0.1).setDepth(2)
+    const southGlow = this.add.circle(centerX + 80, centerY + 60, 90, 0x2196f3, 0.1).setDepth(2)
 
-    this.southIsland.on("pointerdown", () => {
+    southButton.on("pointerdown", () => {
       this.selectRegion("south")
     })
 
-    this.southIsland.on("pointerover", () => {
-      this.southIsland?.setTint(0xdddddd)
+    southButton.on("pointerover", () => {
       this.tweens.add({
-        targets: southGlow,
-        alpha: 0.3,
-        duration: 300,
+        targets: [southButton, southGlow],
+        alpha: 0.9,
+        scaleX: 1.1,
+        scaleY: 1.1,
+        duration: 200,
       })
       this.showRegionInfo("south")
     })
 
-    this.southIsland.on("pointerout", () => {
-      this.southIsland?.clearTint()
+    southButton.on("pointerout", () => {
       this.tweens.add({
-        targets: southGlow,
-        alpha: 0.1,
-        duration: 300,
+        targets: [southButton, southGlow],
+        alpha: 0.7,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 200,
       })
       this.hideRegionInfo()
     })
 
+    // 添加标签
     this.add
-      .text(centerX - 120, centerY + 40, "北岛", {
-        fontSize: "18px",
+      .text(centerX - 80, centerY - 40, "北岛\nNorth Island", {
+        fontSize: "16px",
         color: "#ffffff",
         fontStyle: "bold",
         stroke: "#000000",
         strokeThickness: 2,
+        align: "center",
       })
       .setOrigin(0.5)
       .setDepth(10)
 
     this.add
-      .text(centerX + 120, centerY + 160, "南岛", {
-        fontSize: "18px",
+      .text(centerX + 80, centerY + 60, "南岛\nSouth Island", {
+        fontSize: "16px",
         color: "#ffffff",
         fontStyle: "bold",
         stroke: "#000000",
         strokeThickness: 2,
+        align: "center",
       })
       .setOrigin(0.5)
       .setDepth(10)
+
+    // 存储引用
+    this.northIsland = northButton as any
+    this.southIsland = southButton as any
   }
 
   private createAnimalHabitats() {
     const centerX = this.cameras.main.centerX
     const centerY = this.cameras.main.centerY
+    const isMobile = this.cameras.main.width < 768
 
     const habitats = [
-      { x: centerX - 150, y: centerY - 90, animal: "kiwi", region: "north" },
-      { x: centerX - 90, y: centerY - 30, animal: "tuatara", region: "north" },
-      { x: centerX + 90, y: centerY + 30, animal: "kakapo", region: "south" },
-      { x: centerX + 150, y: centerY + 90, animal: "penguin", region: "south" },
+      // 北岛动物 - 重新定位避免重叠
+      { x: centerX - 100, y: centerY - 80, animal: "kiwi", region: "north" },
+      { x: centerX - 60, y: centerY - 20, animal: "tuatara", region: "north" },
+      // 南岛动物 - 重新定位避免重叠
+      { x: centerX + 60, y: centerY + 40, animal: "kakapo", region: "south" },
+      { x: centerX + 100, y: centerY + 80, animal: "penguin", region: "south" },
     ]
 
     habitats.forEach((habitat, index) => {
+      // 添加动物栖息地的小圆圈背景 - 降低深度避免干扰
+      const habitatBg = this.add
+        .circle(habitat.x, habitat.y, 10, 0xffffff, 0.8)
+        .setDepth(3)
+        .setStrokeStyle(2, 0x333333)
+
       const marker = this.add
         .image(habitat.x, habitat.y, `${habitat.animal}-icon`)
-        .setScale(0.4)
-        .setDepth(4)
-        .setInteractive({ useHandCursor: true })
+        .setScale(0.05)
+        .setDepth(6) // 提高深度确保在背景之上
+        .setInteractive({ 
+          useHandCursor: true,
+          hitArea: new Phaser.Geom.Circle(0, 0, isMobile ? 30 : 20) // 移动端增加点击区域
+        })
+        .setAlpha(0.9)
 
       this.animalMarkers.add(marker)
 
-      this.tweens.add({
-        targets: marker,
-        scaleX: 0.5,
-        scaleY: 0.5,
-        duration: 1500,
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
-        delay: index * 500,
-      })
-
       marker.on("pointerover", () => {
         marker.setTint(0xffff00)
+        this.tweens.add({
+          targets: marker,
+          scaleX: isMobile ? 0.1 : 0.08,
+          scaleY: isMobile ? 0.1 : 0.08,
+          duration: 200,
+        })
         this.showAnimalInfo(habitat.animal, habitat.x, habitat.y)
       })
 
       marker.on("pointerout", () => {
         marker.clearTint()
+        this.tweens.add({
+          targets: marker,
+          scaleX: 0.05,
+          scaleY: 0.05,
+          duration: 200,
+        })
         this.hideAnimalInfo()
       })
 
       marker.on("pointerdown", () => {
-        this.selectRegion(habitat.region)
+        // 移动端添加触觉反馈
+        if ('vibrate' in navigator) {
+          navigator.vibrate(50)
+        }
+        this.selectRegion(habitat.region as "north" | "south")
       })
     })
   }
 
   private createInfoPanel() {
+    const isMobile = this.cameras.main.width < 768
+    const panelX = isMobile ? this.cameras.main.width - 180 : this.cameras.main.width - 220
+    const panelY = isMobile ? 100 : 120
+    const panelWidth = isMobile ? 160 : 200
+    const panelHeight = isMobile ? 140 : 160
+    
     this.infoPanel = this.add
-      .container(this.cameras.main.width - 200, 100)
+      .container(panelX, panelY)
       .setDepth(15)
       .setAlpha(0)
 
-    const panelBg = this.add.rectangle(0, 0, 180, 120, 0x000000, 0.8).setStroke(0xffffff, 2)
+    const panelBg = this.add.rectangle(0, 0, panelWidth, panelHeight, 0x000000, 0.9)
+    const panelBorder = this.add.rectangle(0, 0, panelWidth, panelHeight).setStrokeStyle(3, 0xffffff)
 
+    const titleSize = isMobile ? "12px" : "14px"
+    const contentSize = isMobile ? "10px" : "11px"
+    const wordWrapWidth = isMobile ? 140 : 180
+    
     const panelTitle = this.add
-      .text(0, -40, "", {
-        fontSize: "16px",
-        color: "#ffffff",
+      .text(0, isMobile ? -50 : -60, "", {
+        fontSize: titleSize,
+        color: "#4CAF50",
         fontStyle: "bold",
       })
       .setOrigin(0.5)
 
     const panelContent = this.add
       .text(0, 0, "", {
-        fontSize: "12px",
+        fontSize: contentSize,
         color: "#ffffff",
         align: "center",
-        wordWrap: { width: 160 },
+        wordWrap: { width: wordWrapWidth },
+        lineSpacing: 4,
       })
       .setOrigin(0.5)
 
-    this.infoPanel.add([panelBg, panelTitle, panelContent])
-  }
-
-  private createLegend() {
-    const legendContainer = this.add.container(50, this.cameras.main.height - 150).setDepth(10)
-
-    const legendBg = this.add.rectangle(0, 0, 160, 100, 0x000000, 0.7).setStroke(0xffffff, 1)
-
-    const legendTitle = this.add
-      .text(0, -35, "图例", {
-        fontSize: "14px",
-        color: "#ffffff",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5)
-
-    const legendItems = [
-      { icon: "kiwi-icon", text: "几维鸟", y: -15 },
-      { icon: "penguin-icon", text: "企鹅", y: 0 },
-      { icon: "kakapo-icon", text: "鸮鹦鹉", y: 15 },
-      { icon: "tuatara-icon", text: "楔齿蜥", y: 30 },
-    ]
-
-    legendItems.forEach((item) => {
-      const icon = this.add.image(-60, item.y, item.icon).setScale(0.2)
-      const text = this.add
-        .text(-40, item.y, item.text, {
-          fontSize: "10px",
-          color: "#ffffff",
-        })
-        .setOrigin(0, 0.5)
-
-      legendContainer.add([icon, text])
-    })
-
-    legendContainer.add([legendBg, legendTitle])
+    this.infoPanel.add([panelBg, panelBorder, panelTitle, panelContent])
   }
 
   private showRegionInfo(region: "north" | "south") {
@@ -376,27 +437,32 @@ export class MapScene extends Phaser.Scene {
 
     const regionData = {
       north: {
-        title: "北岛",
-        content: "温带气候\n森林和草原\n几维鸟和楔齿蜥的家园",
+        title: "北岛 (North Island)",
+        content: "🌿 温带海洋性气候\n🏞️ 森林、草原和火山\n🐦 几维鸟和楔齿蜥的家园\n🌡️ 温暖湿润，适合多样生物",
       },
       south: {
-        title: "南岛",
-        content: "多样化地形\n山脉和海岸\n鸮鹦鹉和企鹅栖息地",
+        title: "南岛 (South Island)",
+        content: "🏔️ 壮丽的山脉和峡湾\n🌊 丰富的海洋生态\n🐧 企鹅和鸮鹦鹉栖息地\n❄️ 气候凉爽，地形多样",
       },
     }
 
     const data = regionData[region]
-    const title = this.infoPanel.list[1] as Phaser.GameObjects.Text
-    const content = this.infoPanel.list[2] as Phaser.GameObjects.Text
+    const children = this.infoPanel.getAll()
+    
+    // 正确获取子元素 - 根据添加顺序：panelBg, panelBorder, panelTitle, panelContent
+    const title = children[2] as Phaser.GameObjects.Text  // panelTitle is the 3rd child (index 2)
+    const content = children[3] as Phaser.GameObjects.Text  // panelContent is the 4th child (index 3)
 
-    title.setText(data.title)
-    content.setText(data.content)
+    if (title && content) {
+      title.setText(data.title)
+      content.setText(data.content)
 
-    this.tweens.add({
-      targets: this.infoPanel,
-      alpha: 1,
-      duration: 300,
-    })
+      this.tweens.add({
+        targets: this.infoPanel,
+        alpha: 1,
+        duration: 300,
+      })
+    }
   }
 
   private hideRegionInfo() {
@@ -440,7 +506,6 @@ export class MapScene extends Phaser.Scene {
   }
 
   private selectRegion(region: "north" | "south") {
-    console.log(`Selected region: ${region}`)
     this.selectedRegion = region
 
     if (this.gameManager) {

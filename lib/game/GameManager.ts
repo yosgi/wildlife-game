@@ -1,4 +1,5 @@
 import { GameState } from "./GameState"
+import { MainMenuScene } from "./scenes/MainMenuScene"
 import { MapScene } from "./scenes/MapScene"
 import { ARScene } from "./scenes/ARScene"
 import { BackpackScene } from "./scenes/BackpackScene"
@@ -25,9 +26,6 @@ export class GameManager {
 
     // Initialize Phaser game
     await this.initializePhaser()
-
-    // Set up event listeners
-    this.setupEventListeners()
   }
 
   private async initializePhaser() {
@@ -40,7 +38,7 @@ export class GameManager {
       height: window.innerHeight,
       parent: this.container,
       backgroundColor: "#87CEEB",
-      scene: [MapScene, ARScene, BackpackScene],
+      scene: [MainMenuScene, MapScene, ARScene, BackpackScene],
       physics: {
         default: "arcade",
         arcade: {
@@ -51,64 +49,83 @@ export class GameManager {
       scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: window.innerWidth,
+        height: window.innerHeight,
       },
+      // 移动端优化配置
+      input: {
+        touch: {
+          target: this.container,
+          capture: true
+        }
+      },
+      render: {
+        pixelArt: true,
+        antialias: false,
+        roundPixels: true,
+        powerPreference: "high-performance"
+      },
+      // 移动端性能优化
+      fps: {
+        target: 60,
+        forceSetTimeOut: true
+      },
+      // 防止移动端缩放
+      dom: {
+        createContainer: true
+      }
     }
 
     this.phaserGame = new Phaser.Game(config)
     this.phaserGame.gameManager = this
+    
+    // 在registry中注册gameManager，这样所有场景都能访问
+    this.phaserGame.registry.set("gameManager", this)
+    console.log("GameManager registered in Phaser registry")
+
+    // 移动端事件处理
+    this.setupMobileEvents()
   }
 
-  private setupEventListeners() {
-    // Handle window resize
-    window.addEventListener("resize", () => {
+  private setupMobileEvents() {
+    // 防止移动端双击缩放
+    let lastTouchEnd = 0
+    document.addEventListener('touchend', (event) => {
+      const now = (new Date()).getTime()
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault()
+      }
+      lastTouchEnd = now
+    }, false)
+
+    // 防止移动端滚动
+    document.addEventListener('touchmove', (event) => {
+      if (event.target === this.container) {
+        event.preventDefault()
+      }
+    }, { passive: false })
+
+    // 处理屏幕旋转
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        if (this.phaserGame) {
+          this.phaserGame.scale.resize(window.innerWidth, window.innerHeight)
+        }
+      }, 100)
+    })
+
+    // 处理窗口大小变化
+    window.addEventListener('resize', () => {
       if (this.phaserGame) {
         this.phaserGame.scale.resize(window.innerWidth, window.innerHeight)
       }
     })
-
-    // Handle UI button clicks
-    this.setupUIHandlers()
-
-    window.addEventListener("showBackpack", (event: any) => {
-      this.switchToBackpackScene()
-    })
-  }
-
-  private setupUIHandlers() {
-    // AR exploration button
-    const arButton = document.querySelector('[data-action="explore-ar"]')
-    if (arButton) {
-      arButton.addEventListener("click", () => this.startARMode())
-    }
-
-    // Map button
-    const mapButton = document.querySelector('[data-action="map"]')
-    if (mapButton) {
-      mapButton.addEventListener("click", () => this.showMap())
-    }
-
-    // Backpack button
-    const backpackButton = document.querySelector('[data-action="backpack"]')
-    if (backpackButton) {
-      backpackButton.addEventListener("click", () => this.showBackpack())
-    }
   }
 
   startARMode() {
     console.log("Starting AR mode...")
     // Switch to AR scene
     this.switchToARScene()
-  }
-
-  showMap() {
-    console.log("Showing map...")
-    // Switch to map scene
-    this.switchToMapScene()
-  }
-
-  showBackpack() {
-    console.log("Showing backpack...")
-    this.switchToBackpackScene()
   }
 
   private switchToARScene() {
@@ -128,9 +145,14 @@ export class GameManager {
   }
 
   private switchToBackpackScene() {
+    console.log("switchToBackpackScene called!")
     if (this.phaserGame) {
+      console.log("Switching to BackpackScene...")
       this.gameState.setCurrentMode("backpack")
       this.phaserGame.scene.start("BackpackScene")
+      console.log("Scene switch command sent")
+    } else {
+      console.error("phaserGame is not initialized!")
     }
   }
 
