@@ -32,28 +32,27 @@ export class AIEducationService {
     try {
       const difficulty = this.getDifficultyLevel(playerLevel)
 
-      const prompt = `作为新西兰动物保护专家，为${animal.name}(${animal.species})生成教育内容。
+      const prompt = `As a New Zealand wildlife conservation expert, generate educational content for ${animal.name} (${animal.species}).
       
-动物信息：
-- 栖息地：${animal.habitat}
-- 饮食：${animal.diet.join("、")}
-- 保护状态：${animal.conservationStatus}
-- 描述：${animal.description}
+Animal information:
+- Habitat: ${animal.habitat}
+- Diet: ${animal.diet.join(", ")}
+- Conservation status: ${animal.conservationStatus}
+- Description: ${animal.description}
 
-请生成3-4个不同类型的教育内容，难度级别：${difficulty}
+Please generate 3-4 different types of educational content, difficulty level: ${difficulty}
 
-格式要求：
-1. 有趣的事实
-2. 保护知识
-3. 生态故事
-4. 互动问题
+Format requirements:
+1. Interesting facts
+2. Conservation knowledge
+3. Ecological stories
+4. Interactive questions
 
-每个内容应该适合${difficulty}级别，内容要准确、有趣且具有教育意义。`
+Each content should be appropriate for ${difficulty} level, accurate, interesting and educational.`
 
       const { text } = await generateText({
         model: openai("gpt-4o"),
         prompt,
-        maxTokens: 1000,
       })
 
       return this.parseEducationalContent(text, difficulty)
@@ -72,21 +71,20 @@ export class AIEducationService {
     }
 
     try {
-      const prompt = `为${animal.name}(${animal.species})创建一个${difficulty}级别的测验。
+      const prompt = `Create a ${difficulty} level quiz for ${animal.name} (${animal.species}).
 
-动物信息：
-- 栖息地：${animal.habitat}
-- 饮食：${animal.diet.join("、")}
-- 保护状态：${animal.conservationStatus}
-- 描述：${animal.description}
+Animal information:
+- Habitat: ${animal.habitat}
+- Diet: ${animal.diet.join(", ")}
+- Conservation status: ${animal.conservationStatus}
+- Description: ${animal.description}
 
-请生成3个选择题，每题4个选项，包含正确答案和解释。
-格式：JSON数组，每个问题包含question, options, correctAnswer(索引), explanation字段。`
+Please generate 3 multiple choice questions, each with 4 options, including correct answer and explanation.
+Format: JSON array, each question contains question, options, correctAnswer (index), explanation fields.`
 
       const { text } = await generateText({
         model: openai("gpt-4o"),
         prompt,
-        maxTokens: 800,
       })
 
       return this.parseQuizQuestions(text)
@@ -102,18 +100,17 @@ export class AIEducationService {
     }
 
     try {
-      const context = animal ? `关于${animal.name}(${animal.species})的问题：` : "关于新西兰动物的问题："
+      const context = animal ? `Question about ${animal.name} (${animal.species}):` : "Question about New Zealand wildlife:"
 
       const prompt = `${context}
 
-问题：${question}
+Question: ${question}
 
-请提供准确、有趣且适合儿童理解的答案。如果问题与新西兰动物保护相关，请重点介绍保护知识。答案应该在150字以内。`
+Please provide an accurate, interesting answer suitable for children to understand. If the question is related to New Zealand wildlife conservation, focus on conservation knowledge. Answer should be within 150 words.`
 
       const { text } = await generateText({
         model: openai("gpt-4o"),
         prompt,
-        maxTokens: 300,
       })
 
       return text.trim()
@@ -128,23 +125,23 @@ export class AIEducationService {
 
     // Based on captured animals
     if (capturedAnimals.length === 0) {
-      recommendations.push("开始探索新西兰的北岛或南岛，发现你的第一只动物！")
+      recommendations.push("Start exploring New Zealand's North or South Island to discover your first animal!")
     } else if (capturedAnimals.length < 2) {
-      recommendations.push("继续探索，还有更多神奇的动物等待发现！")
+      recommendations.push("Continue exploring, there are more amazing animals waiting to be discovered!")
     }
 
     // Based on intimacy levels
     const lowIntimacyAnimals = capturedAnimals.filter((a) => a.intimacyLevel < 3)
     if (lowIntimacyAnimals.length > 0) {
-      recommendations.push(`多与${lowIntimacyAnimals[0].name}互动，增加亲密度可以解锁更多内容！`)
+      recommendations.push(`Interact more with ${lowIntimacyAnimals[0].name} to increase intimacy and unlock more content!`)
     }
 
     // Conservation awareness
     const endangeredAnimals = capturedAnimals.filter(
-      (a) => a.conservationStatus === "极度濒危" || a.conservationStatus === "濒危",
+      (a) => a.conservationStatus === "Critically Endangered" || a.conservationStatus === "Endangered",
     )
     if (endangeredAnimals.length > 0) {
-      recommendations.push(`了解${endangeredAnimals[0].name}的保护状况，学习如何帮助保护它们！`)
+      recommendations.push(`Learn about ${endangeredAnimals[0].name}'s conservation status and how to help protect them!`)
     }
 
     // Region-based recommendations
@@ -152,9 +149,9 @@ export class AIEducationService {
     const southAnimals = capturedAnimals.filter((a) => a.region === "south" || a.region === "both")
 
     if (northAnimals.length > southAnimals.length) {
-      recommendations.push("尝试探索南岛，发现不同的动物种类！")
+      recommendations.push("Try exploring the South Island to discover different animal species!")
     } else if (southAnimals.length > northAnimals.length) {
-      recommendations.push("北岛还有很多动物等待你的发现！")
+      recommendations.push("The North Island still has many animals waiting for your discovery!")
     }
 
     return recommendations.slice(0, 3) // Return top 3 recommendations
@@ -178,12 +175,12 @@ export class AIEducationService {
         const content = section.trim()
         let type: "fact" | "quiz" | "story" | "conservation" = "fact"
 
-        if (content.includes("保护") || content.includes("濒危")) type = "conservation"
-        else if (content.includes("故事") || content.includes("传说")) type = "story"
-        else if (content.includes("问题") || content.includes("测验")) type = "quiz"
+        if (content.includes("conservation") || content.includes("endangered")) type = "conservation"
+        else if (content.includes("story") || content.includes("legend")) type = "story"
+        else if (content.includes("question") || content.includes("quiz")) type = "quiz"
 
         return {
-          topic: `内容 ${index + 1}`,
+          topic: `Content ${index + 1}`,
           content,
           difficulty,
           type,
@@ -204,7 +201,8 @@ export class AIEducationService {
     }
 
     return this.getFallbackQuiz({
-      name: "动物",
+      id: "fallback",
+      name: "Animal",
       species: "",
       region: "north",
       habitat: "",
@@ -219,20 +217,20 @@ export class AIEducationService {
   private getFallbackContent(animal: Animal): EducationalContent[] {
     return [
       {
-        topic: "基本信息",
-        content: `${animal.name}是新西兰的本土动物，生活在${animal.habitat}中。它们主要以${animal.diet.join("、")}为食。`,
+        topic: "Basic Information",
+        content: `${animal.name} is a native animal of New Zealand, living in ${animal.habitat}. They mainly feed on ${animal.diet.join(", ")}.`,
         difficulty: "beginner",
         type: "fact",
       },
       {
-        topic: "保护状况",
-        content: `${animal.name}目前的保护状况是${animal.conservationStatus}。我们需要保护它们的栖息地，确保这些珍贵的动物能够继续生存。`,
+        topic: "Conservation Status",
+        content: `${animal.name} currently has a conservation status of ${animal.conservationStatus}. We need to protect their habitat to ensure these precious animals can continue to survive.`,
         difficulty: "beginner",
         type: "conservation",
       },
       {
-        topic: "有趣事实",
-        content: `${animal.description}这使得${animal.name}成为新西兰独特生态系统中的重要组成部分。`,
+        topic: "Interesting Facts",
+        content: `${animal.description} This makes ${animal.name} an important part of New Zealand's unique ecosystem.`,
         difficulty: "beginner",
         type: "fact",
       },
@@ -242,24 +240,24 @@ export class AIEducationService {
   private getFallbackQuiz(animal: Animal): QuizQuestion[] {
     return [
       {
-        question: `${animal.name}主要生活在哪里？`,
-        options: [animal.habitat, "城市", "沙漠", "北极"],
+        question: `Where does ${animal.name} mainly live?`,
+        options: [animal.habitat, "City", "Desert", "Arctic"],
         correctAnswer: 0,
-        explanation: `${animal.name}的主要栖息地是${animal.habitat}。`,
+        explanation: `${animal.name}'s main habitat is ${animal.habitat}.`,
       },
       {
-        question: `${animal.name}的保护状况是什么？`,
-        options: ["无危", animal.conservationStatus, "已灭绝", "未评估"],
+        question: `What is ${animal.name}'s conservation status?`,
+        options: ["Least Concern", animal.conservationStatus, "Extinct", "Not Evaluated"],
         correctAnswer: 1,
-        explanation: `${animal.name}目前被列为${animal.conservationStatus}。`,
+        explanation: `${animal.name} is currently listed as ${animal.conservationStatus}.`,
       },
     ]
   }
 
   private getFallbackAnswer(question: string, animal?: Animal): string {
     if (animal) {
-      return `关于${animal.name}：${animal.description} 它们生活在${animal.habitat}，主要以${animal.diet.join("、")}为食。如果你想了解更多，可以尝试与${animal.name}互动来增加亲密度！`
+      return `About ${animal.name}: ${animal.description} They live in ${animal.habitat} and mainly feed on ${animal.diet.join(", ")}. If you want to learn more, try interacting with ${animal.name} to increase intimacy!`
     }
-    return "这是一个关于新西兰动物的有趣问题！新西兰有许多独特的本土动物，如几维鸟、鸮鹦鹉等。继续探索游戏来了解更多吧！"
+    return "This is an interesting question about New Zealand wildlife! New Zealand has many unique native animals, such as kiwi, kakapo, and more. Continue exploring the game to learn more!"
   }
 }

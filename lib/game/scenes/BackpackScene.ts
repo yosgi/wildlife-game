@@ -15,6 +15,17 @@ export class BackpackScene extends Phaser.Scene {
   private contentElement!: HTMLDivElement
   private modalElement!: HTMLDivElement
 
+  // Safe haptic feedback function
+  private safeVibrate(duration: number = 50) {
+    if ('vibrate' in navigator && typeof navigator.vibrate === 'function') {
+      try {
+        navigator.vibrate(duration)
+      } catch (error) {
+        console.log('Vibration not supported:', error)
+      }
+    }
+  }
+
   constructor() {
     super({ key: "BackpackScene" })
   }
@@ -27,13 +38,13 @@ export class BackpackScene extends Phaser.Scene {
     this.createBackground()
     this.setupDOMInterface()
     
-    // 添加窗口大小变化监听
+    // Add window resize listener
     this.setupResizeHandler()
   }
 
   private setupResizeHandler() {
     const handleResize = () => {
-      // 重新创建界面以适应新的屏幕尺寸
+      // Recreate interface to adapt to new screen size
       if (this.domContainer) {
         this.domContainer.remove()
       }
@@ -47,7 +58,7 @@ export class BackpackScene extends Phaser.Scene {
 
     window.addEventListener('resize', handleResize)
     window.addEventListener('orientationchange', () => {
-      // 屏幕旋转时延迟处理，等待旋转完成
+      // Delay handling when screen rotates, wait for rotation to complete
       setTimeout(handleResize, 100)
     })
   }
@@ -285,7 +296,7 @@ export class BackpackScene extends Phaser.Scene {
           this.style.boxShadow = '2px 2px 0 #2E7D32, 4px 4px 0 rgba(0,0,0,0.3)';
         " ontouchstart="
           if('vibrate' in navigator) navigator.vibrate(30);
-        ">← 返回</button>
+        ">← Back</button>
         
         <div style="text-align: center; flex: 1; min-width: 0;">
           <h1 style="
@@ -297,7 +308,7 @@ export class BackpackScene extends Phaser.Scene {
             text-shadow: 4px 4px 0 #1a1a2e, 8px 8px 0 rgba(0,0,0,0.3);
             letter-spacing: 2px;
             word-wrap: break-word;
-          ">🎒 动物收藏</h1>
+          "> Animal Collection</h1>
           <p style="
             margin: 8px 0 0 0; 
             color: #ffffff; 
@@ -305,7 +316,7 @@ export class BackpackScene extends Phaser.Scene {
             font-family: 'Courier New', monospace;
             text-shadow: 2px 2px 0 #1a1a2e;
           ">
-            已收集: ${capturedAnimals.length}/${totalAnimals}
+            Captured: ${capturedAnimals.length}/${totalAnimals}
           </p>
         </div>
         
@@ -313,12 +324,10 @@ export class BackpackScene extends Phaser.Scene {
       </div>
     `
 
-    // 添加返回按钮事件
+    // Add back button event
     this.headerElement.querySelector('#back-button')?.addEventListener('click', () => {
-      // 移动端触觉反馈
-      if ('vibrate' in navigator) {
-        navigator.vibrate(30)
-      }
+      // Mobile haptic feedback
+      this.safeVibrate(30)
       this.exitBackpack()
     })
 
@@ -340,19 +349,19 @@ export class BackpackScene extends Phaser.Scene {
       <div style="background: rgba(42, 42, 62, 0.9); padding: ${isMobile ? '20px' : '20px'}; border: 4px solid #4CAF50; margin-bottom: 30px; box-shadow: 8px 8px 0 rgba(76, 175, 80, 0.3);">
         <div class="controls-container" style="display: flex; flex-direction: column; gap: ${isMobile ? '16px' : '20px'};">
           <div class="controls-section">
-            <label style="color: #4CAF50; font-size: ${isMobile ? '14px' : '14px'}; margin-bottom: 8px; font-family: 'Courier New', monospace; font-weight: bold; text-shadow: 2px 2px 0 #1a1a2e; display: block;">筛选:</label>
+            <label style="color: #4CAF50; font-size: ${isMobile ? '14px' : '14px'}; margin-bottom: 8px; font-family: 'Courier New', monospace; font-weight: bold; text-shadow: 2px 2px 0 #1a1a2e; display: block;">Filter:</label>
             <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-              <button class="filter-btn pixel-btn active" data-filter="all">全部</button>
-              <button class="filter-btn pixel-btn" data-filter="north">北岛</button>
-              <button class="filter-btn pixel-btn" data-filter="south">南岛</button>
+              <button class="filter-btn pixel-btn active" data-filter="all">All</button>
+              <button class="filter-btn pixel-btn" data-filter="north">North Island</button>
+              <button class="filter-btn pixel-btn" data-filter="south">South Island</button>
             </div>
           </div>
           <div class="controls-section">
-            <label style="color: #4CAF50; font-size: ${isMobile ? '14px' : '14px'}; margin-bottom: 8px; font-family: 'Courier New', monospace; font-weight: bold; text-shadow: 2px 2px 0 #1a1a2e; display: block;">排序:</label>
+            <label style="color: #4CAF50; font-size: ${isMobile ? '14px' : '14px'}; margin-bottom: 8px; font-family: 'Courier New', monospace; font-weight: bold; text-shadow: 2px 2px 0 #1a1a2e; display: block;">Sort:</label>
             <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-              <button class="sort-btn pixel-btn active" data-sort="name">名称</button>
-              <button class="sort-btn pixel-btn" data-sort="intimacy">亲密度</button>
-              <button class="sort-btn pixel-btn" data-sort="recent">最近</button>
+              <button class="sort-btn pixel-btn active" data-sort="name">Name</button>
+              <button class="sort-btn pixel-btn" data-sort="intimacy">Intimacy</button>
+              <button class="sort-btn pixel-btn" data-sort="recent">Recent</button>
             </div>
           </div>
         </div>
@@ -374,16 +383,14 @@ export class BackpackScene extends Phaser.Scene {
   }
 
   private setupControlEvents() {
-    // 筛选按钮
+    // Filter buttons
     this.contentElement.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const target = e.target as HTMLButtonElement
         const filter = target.dataset.filter as "all" | "north" | "south"
         
-        // 移动端触觉反馈
-        if ('vibrate' in navigator) {
-          navigator.vibrate(20)
-        }
+        // Mobile haptic feedback
+        this.safeVibrate(20)
         
         this.setFilter(filter)
         this.updateControlButtons()
@@ -391,16 +398,14 @@ export class BackpackScene extends Phaser.Scene {
       })
     })
 
-    // 排序按钮
+    // Sort buttons
     this.contentElement.querySelectorAll('.sort-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const target = e.target as HTMLButtonElement
         const sort = target.dataset.sort as "name" | "intimacy" | "recent"
         
-        // 移动端触觉反馈
-        if ('vibrate' in navigator) {
-          navigator.vibrate(20)
-        }
+        // Mobile haptic feedback
+        this.safeVibrate(20)
         
         this.setSort(sort)
         this.updateControlButtons()
@@ -410,7 +415,7 @@ export class BackpackScene extends Phaser.Scene {
   }
 
   private updateControlButtons() {
-    // 更新筛选按钮样式
+    // Update filter button styles
     this.contentElement.querySelectorAll('.filter-btn').forEach(btn => {
       const button = btn as HTMLButtonElement
       if (button.dataset.filter === this.filterMode) {
@@ -420,7 +425,7 @@ export class BackpackScene extends Phaser.Scene {
       }
     })
 
-    // 更新排序按钮样式
+    // Update sort button styles
     this.contentElement.querySelectorAll('.sort-btn').forEach(btn => {
       const button = btn as HTMLButtonElement
       if (button.dataset.sort === this.sortMode) {
@@ -436,7 +441,7 @@ export class BackpackScene extends Phaser.Scene {
     const allAnimals = this.getAllAnimalsForDisplay()
     const capturedAnimals = this.gameManager.getGameState().getCapturedAnimals()
 
-    // 创建所有动物的卡片（包括未收集的）
+    // Create cards for all animals (including uncollected ones)
     animalsGrid.innerHTML = allAnimals.map(animal => {
       const isCaptured = capturedAnimals.some((captured: Animal) => captured.id === animal.id)
       const capturedAnimal = isCaptured ? capturedAnimals.find((captured: Animal) => captured.id === animal.id) : null
@@ -446,16 +451,14 @@ export class BackpackScene extends Phaser.Scene {
         : this.createUnknownAnimalCardHTML(animal)
     }).join('')
 
-    // 添加卡片点击事件
+    // Add card click events
     animalsGrid.querySelectorAll('.animal-card').forEach(card => {
       card.addEventListener('click', (e) => {
         const animalId = (e.currentTarget as HTMLElement).dataset.animalId
         const isCaptured = (e.currentTarget as HTMLElement).dataset.captured === 'true'
         
-        // 移动端触觉反馈
-        if ('vibrate' in navigator) {
-          navigator.vibrate(50)
-        }
+        // Mobile haptic feedback
+        this.safeVibrate(50)
         
         if (isCaptured) {
           const animal = capturedAnimals.find((a: Animal) => a.id === animalId)
@@ -463,8 +466,8 @@ export class BackpackScene extends Phaser.Scene {
             this.selectAnimal(animal)
           }
         } else {
-          // 显示未收集提示
-          this.showFeedback('❓ 还没有发现这个动物，继续探索吧！')
+          // Show uncollected hint
+          this.showFeedback('❓ This animal has not been discovered yet, continue exploring!')
         }
       })
     })
@@ -472,11 +475,11 @@ export class BackpackScene extends Phaser.Scene {
 
   private createAnimalCardHTML(animal: Animal): string {
     const statusColors = {
-      '极度濒危': '#ff0000',
-      '濒危': '#ff4444',
-      '易危': '#ff8800',
-      '近危': '#ffaa00',
-      '无危': '#4caf50',
+      'Critically Endangered': '#ff0000',
+      'Endangered': '#ff4444',
+      'Vulnerable': '#ff8800',
+      'Near Threatened': '#ffaa00',
+      'Least Concern': '#4caf50',
     }
     const statusColor = statusColors[animal.conservationStatus as keyof typeof statusColors] || '#888888'
     
@@ -537,7 +540,7 @@ export class BackpackScene extends Phaser.Scene {
             background: rgba(0,0,0,0.3);
             padding: 4px 8px;
             border: 1px solid #4CAF50;
-          ">亲密度: ${animal.intimacyLevel}/10</div>
+          ">Intimacy: ${animal.intimacyLevel}/10</div>
         </div>
       </div>
     `
@@ -582,7 +585,7 @@ export class BackpackScene extends Phaser.Scene {
             font-weight: bold;
             text-shadow: 2px 2px 0 #000;
             letter-spacing: 1px;
-          ">未知动物</h3>
+          ">Unknown Animal</h3>
           <div style="
             font-size: ${descSize}; 
             margin-bottom: 12px;
@@ -599,7 +602,7 @@ export class BackpackScene extends Phaser.Scene {
             background: rgba(0,0,0,0.5);
             padding: 4px 8px;
             border: 1px solid #666666;
-          ">去探索发现！</div>
+          ">Discover it!</div>
         </div>
       </div>
     `
@@ -703,21 +706,21 @@ export class BackpackScene extends Phaser.Scene {
             font-size: ${textSize};
             font-family: 'Courier New', monospace;
             text-shadow: 2px 2px 0 #000;
-          ">保护状态: ${animal.conservationStatus}</p>
+          ">Conservation Status: ${animal.conservationStatus}</p>
           <p style="
             color: #ffffff; 
             margin: 15px 0;
             font-size: ${textSize};
             font-family: 'Courier New', monospace;
             text-shadow: 2px 2px 0 #000;
-          ">栖息地: ${animal.habitat}</p>
+          ">Habitat: ${animal.habitat}</p>
           <p style="
             color: #ffffff; 
             margin: 15px 0;
             font-size: ${textSize};
             font-family: 'Courier New', monospace;
             text-shadow: 2px 2px 0 #000;
-          ">亲密度: ${animal.intimacyLevel}/10</p>
+          ">Intimacy: ${animal.intimacyLevel}/10</p>
         </div>
 
         <div style="display: flex; gap: ${isMobile ? '12px' : '20px'}; justify-content: center; flex-wrap: wrap;">
@@ -736,7 +739,7 @@ export class BackpackScene extends Phaser.Scene {
             min-width: 44px;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
-          ">🍎 喂食</button>
+          ">🍎 Feed</button>
           
           <button id="learn-animal" class="pixel-btn" style="
             background: #2196F3 !important;
@@ -753,7 +756,7 @@ export class BackpackScene extends Phaser.Scene {
             min-width: 44px;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
-          ">📚 学习</button>
+          ">📚 Learn</button>
           
           <button id="quiz-animal" class="pixel-btn" style="
             background: #FF9800 !important;
@@ -770,7 +773,7 @@ export class BackpackScene extends Phaser.Scene {
             min-width: 44px;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
-          ">🧠 测验</button>
+          ">🧠 Quiz</button>
         </div>
       </div>
     `
@@ -778,40 +781,32 @@ export class BackpackScene extends Phaser.Scene {
     this.modalElement.innerHTML = modalContent
     this.modalElement.style.display = 'flex'
 
-    // 添加事件监听器
+    // Add event listeners
     this.modalElement.querySelector('#close-modal')?.addEventListener('click', () => {
-      // 移动端触觉反馈
-      if ('vibrate' in navigator) {
-        navigator.vibrate(30)
-      }
+      // Mobile haptic feedback
+      this.safeVibrate(30)
       this.closeModal()
     })
 
     this.modalElement.querySelector('#feed-animal')?.addEventListener('click', () => {
-      // 移动端触觉反馈
-      if ('vibrate' in navigator) {
-        navigator.vibrate(50)
-      }
+      // Mobile haptic feedback
+      this.safeVibrate(50)
       this.feedAnimal(animal)
     })
 
     this.modalElement.querySelector('#learn-animal')?.addEventListener('click', () => {
-      // 移动端触觉反馈
-      if ('vibrate' in navigator) {
-        navigator.vibrate(50)
-      }
+      // Mobile haptic feedback
+      this.safeVibrate(50)
       this.showEducationalContent(animal)
     })
 
     this.modalElement.querySelector('#quiz-animal')?.addEventListener('click', () => {
-      // 移动端触觉反馈
-      if ('vibrate' in navigator) {
-        navigator.vibrate(50)
-      }
+      // Mobile haptic feedback
+      this.safeVibrate(50)
       this.startQuiz(animal)
     })
 
-    // 点击模态框外部关闭
+    // Close on clicking outside modal
     this.modalElement.addEventListener('click', (e) => {
       if (e.target === this.modalElement) {
         this.closeModal()
@@ -833,7 +828,7 @@ export class BackpackScene extends Phaser.Scene {
     this.loadAnimals() // 刷新显示
     
     // 显示反馈
-    this.showFeedback(`🍎 ${animal.name} 很开心！亲密度 +1`)
+    this.showFeedback(`🍎 ${animal.name} is happy! Intimacy +1`)
   }
 
   private showFeedback(message: string) {
@@ -890,12 +885,12 @@ export class BackpackScene extends Phaser.Scene {
   // 以下是简化的辅助方法
   private async showEducationalContent(animal: Animal) {
     this.closeModal()
-    this.showFeedback(`📚 正在为 ${animal.name} 准备学习内容...`)
+    this.showFeedback(`📚 Preparing educational content for ${animal.name}...`)
   }
 
   private async startQuiz(animal: Animal) {
     this.closeModal()
-    this.showFeedback(`🧠 正在为 ${animal.name} 准备测验...`)
+    this.showFeedback(`🧠 Preparing quiz for ${animal.name}...`)
   }
 
   private setFilter(mode: "all" | "north" | "south") {

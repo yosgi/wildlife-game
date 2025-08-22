@@ -5,23 +5,22 @@ export async function POST(request: Request) {
   try {
     const { question, animal } = await request.json()
 
-    const context = animal ? `关于${animal.name}(${animal.species})的问题：` : "关于新西兰动物的问题："
+    const context = animal ? `Question about ${animal.name} (${animal.species}):` : "Question about New Zealand wildlife:"
 
     const prompt = `${context}
 
-问题：${question}
+Question: ${question}
 
-请提供准确、有趣且适合儿童理解的答案。如果问题与新西兰动物保护相关，请重点介绍保护知识。答案应该在150字以内。`
+Please provide an accurate, interesting answer suitable for children to understand. If the question is related to New Zealand wildlife conservation, focus on conservation knowledge. Answer should be within 150 words.`
 
     const { text } = await generateText({
       model: openai("gpt-4o"),
       prompt,
-      maxTokens: 300,
     })
 
     return Response.json({ answer: text.trim() })
   } catch (error) {
     console.error("AI chat error:", error)
-    return Response.json({ error: "无法生成回答，请稍后再试" }, { status: 500 })
+    return Response.json({ error: "Unable to generate answer, please try again later" }, { status: 500 })
   }
 }

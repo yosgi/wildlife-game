@@ -4,15 +4,15 @@ import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: '新西兰动物探险',
-  description: '探索新西兰的独特动物世界',
+  title: 'New Zealand Wildlife Adventure',
+  description: 'Explore the unique wildlife world of New Zealand',
   generator: 'v0.app',
   viewport: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover",
   themeColor: "#4CAF50",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "新西兰动物探险"
+    title: "New Zealand Wildlife Adventure"
   },
   formatDetection: {
     telephone: false,
@@ -27,12 +27,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="新西兰动物探险" />
+                 <meta name="apple-mobile-web-app-title" content="New Zealand Wildlife Adventure" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#4CAF50" />
         <meta name="format-detection" content="telephone=no, email=no, address=no" />
@@ -43,7 +43,7 @@ html {
   --font-mono: ${GeistMono.variable};
 }
 
-/* 移动端优化 */
+ /* Mobile optimization */
 @media (max-width: 768px) {
   body {
     overflow: hidden;

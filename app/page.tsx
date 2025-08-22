@@ -58,8 +58,8 @@ export default function GamePage() {
       {/* Loading Screen */}
       <div id="loading-screen" className="absolute inset-0 bg-background flex items-center justify-center z-50">
         <Card className="p-8 text-center">
-          <h1 className="text-3xl font-bold mb-4 text-primary">新西兰动物探险</h1>
-          <p className="text-muted-foreground mb-6">加载中...</p>
+          <h1 className="text-3xl font-bold mb-4 text-primary">New Zealand Wildlife Adventure</h1>
+          <p className="text-muted-foreground mb-6">Loading...</p>
           <div className="w-full bg-secondary rounded-full h-2">
             <div className="bg-primary h-2 rounded-full animate-pulse" style={{ width: "60%" }}></div>
           </div>

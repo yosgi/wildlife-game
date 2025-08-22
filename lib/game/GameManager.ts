@@ -52,7 +52,7 @@ export class GameManager {
         width: window.innerWidth,
         height: window.innerHeight,
       },
-      // 移动端优化配置
+      // Mobile optimization configuration
       input: {
         touch: {
           target: this.container,
@@ -65,12 +65,12 @@ export class GameManager {
         roundPixels: true,
         powerPreference: "high-performance"
       },
-      // 移动端性能优化
+      // Mobile performance optimization
       fps: {
         target: 60,
         forceSetTimeOut: true
       },
-      // 防止移动端缩放
+      // Prevent mobile scaling
       dom: {
         createContainer: true
       }
@@ -79,16 +79,16 @@ export class GameManager {
     this.phaserGame = new Phaser.Game(config)
     this.phaserGame.gameManager = this
     
-    // 在registry中注册gameManager，这样所有场景都能访问
+    // Register gameManager in registry so all scenes can access it
     this.phaserGame.registry.set("gameManager", this)
     console.log("GameManager registered in Phaser registry")
 
-    // 移动端事件处理
+    // Mobile event handling
     this.setupMobileEvents()
   }
 
   private setupMobileEvents() {
-    // 防止移动端双击缩放
+    // Prevent mobile double-tap zoom
     let lastTouchEnd = 0
     document.addEventListener('touchend', (event) => {
       const now = (new Date()).getTime()
@@ -98,14 +98,14 @@ export class GameManager {
       lastTouchEnd = now
     }, false)
 
-    // 防止移动端滚动
+    // Prevent mobile scroll
     document.addEventListener('touchmove', (event) => {
       if (event.target === this.container) {
         event.preventDefault()
       }
     }, { passive: false })
 
-    // 处理屏幕旋转
+    // Handle screen rotation
     window.addEventListener('orientationchange', () => {
       setTimeout(() => {
         if (this.phaserGame) {
@@ -114,7 +114,7 @@ export class GameManager {
       }, 100)
     })
 
-    // 处理窗口大小变化
+    // Handle window size change
     window.addEventListener('resize', () => {
       if (this.phaserGame) {
         this.phaserGame.scale.resize(window.innerWidth, window.innerHeight)

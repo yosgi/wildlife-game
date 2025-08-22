@@ -50,7 +50,7 @@ export class ARScene extends Phaser.Scene {
     const indicatorBorder = this.add.rectangle(0, 0, 200, 40).setStrokeStyle(2, 0x00ff00)
 
     const indicatorText = this.add
-      .text(0, 0, "AR 模式激活", {
+      .text(0, 0, "AR Mode Active", {
         fontSize: "16px",
         color: "#00ff00",
         fontStyle: "bold",
@@ -365,7 +365,7 @@ export class ARScene extends Phaser.Scene {
     const backBorder = this.add.rectangle(0, 0, 100, 40).setStrokeStyle(2, 0xffffff)
 
     const backText = this.add
-      .text(0, 0, "← 返回", {
+      .text(0, 0, "← Back", {
         fontSize: "14px",
         color: "#ffffff",
         fontStyle: "bold",
@@ -398,7 +398,7 @@ export class ARScene extends Phaser.Scene {
     const fallbackBorder = this.add.rectangle(0, 0, 300, 150).setStrokeStyle(2, 0xff0000)
 
     const titleText = this.add
-      .text(0, -50, "AR 不可用", {
+      .text(0, -50, "AR Unavailable", {
         fontSize: "20px",
         color: "#ff0000",
         fontStyle: "bold",
@@ -406,7 +406,7 @@ export class ARScene extends Phaser.Scene {
       .setOrigin(0.5)
 
     const messageText = this.add
-      .text(0, -10, "您的设备不支持AR功能\n或摄像头访问被拒绝", {
+      .text(0, -10, "Your device does not support AR\nor camera access has been denied", {
         fontSize: "14px",
         color: "#ffffff",
         align: "center",
@@ -414,7 +414,7 @@ export class ARScene extends Phaser.Scene {
       .setOrigin(0.5)
 
     const simulateButton = this.add
-      .text(0, 30, "模拟模式", {
+      .text(0, 30, "Simulation Mode", {
         fontSize: "16px",
         color: "#ffffff",
         backgroundColor: "#4CAF50",
@@ -461,7 +461,7 @@ export class ARScene extends Phaser.Scene {
       .setOrigin(0.5)
 
     const feedButton = this.add
-      .text(0, 70, "喂养", {
+      .text(0, 70, "Feed", {
         fontSize: "16px",
         color: "#ffffff",
         backgroundColor: "#4CAF50",
@@ -494,12 +494,12 @@ export class ARScene extends Phaser.Scene {
     const instructionText = this.data.get("instructionText")
 
     if (statusText) {
-      statusText.setText(`发现了 ${animal.name}！`)
+      statusText.setText(`Found ${animal.name}!`)
       statusText.setColor("#00ff00")
     }
 
     if (instructionText) {
-      instructionText.setText("点击动物进行互动")
+      instructionText.setText("Click animal for interaction")
     }
 
     this.showFeedingInterface(animal)
@@ -512,12 +512,12 @@ export class ARScene extends Phaser.Scene {
     const instructionText = this.data.get("instructionText")
 
     if (statusText) {
-      statusText.setText("寻找动物标记...")
+      statusText.setText("Searching for animal marker...")
       statusText.setColor("#ffffff")
     }
 
     if (instructionText) {
-      instructionText.setText("将摄像头对准动物标记")
+      instructionText.setText("Point your camera at the animal marker")
     }
 
     this.hideFeedingInterface()
@@ -578,7 +578,7 @@ export class ARScene extends Phaser.Scene {
         .text(
           this.cameras.main.centerX,
           this.cameras.main.centerY - 100,
-          `成功${food ? "喂养" : "捕获"} ${animal.name}！\n已添加到背包中`,
+          `Successfully ${food ? "fed" : "captured"} ${animal.name}!\nAdded to inventory`,
           {
             fontSize: "18px",
             color: "#00ff00",
@@ -615,7 +615,7 @@ export class ARScene extends Phaser.Scene {
         .text(
           this.cameras.main.centerX,
           this.cameras.main.centerY - 100,
-          food ? `${animal.name}不喜欢${food}` : "捕获失败",
+          food ? `${animal.name} doesn't like ${food}` : "Capture failed",
           {
             fontSize: "16px",
             color: "#ff0000",

@@ -7,15 +7,26 @@ export class MainMenuScene extends Phaser.Scene {
   private mapButton!: Phaser.GameObjects.Container
   private titleText!: Phaser.GameObjects.Text
 
+  // Safe haptic feedback function
+  private safeVibrate(duration: number = 50) {
+    if ('vibrate' in navigator && typeof navigator.vibrate === 'function') {
+      try {
+        navigator.vibrate(duration)
+      } catch (error) {
+        console.log('Vibration not supported:', error)
+      }
+    }
+  }
+
   constructor() {
     super({ key: "MainMenuScene" })
   }
 
   preload() {
-    // 背景图片
+    // Background images
     this.load.image("main-bg", "/pixelated-south-island.png")
     
-    // UI元素
+    // UI elements
     this.load.image("pixel-button", "/pixel-button.png")
   }
 
@@ -23,34 +34,34 @@ export class MainMenuScene extends Phaser.Scene {
     this.gameManager = this.registry.get("gameManager")
     console.log("MainMenuScene gameManager:", this.gameManager)
 
-    // 创建背景
+    // Create background
     this.createBackground()
     
-    // 创建标题
+    // Create title
     this.createTitle()
     
-    // 创建按钮
+    // Create buttons
     this.createButtons()
   }
 
   private createBackground() {
-    // 添加背景图片
+    // Add background image
     this.backgroundImage = this.add.image(0, 0, "main-bg")
     this.backgroundImage.setOrigin(0, 0)
     
-    // 调整背景大小以适应屏幕
+    // Adjust background size to fit screen
     const scaleX = this.cameras.main.width / this.backgroundImage.width
     const scaleY = this.cameras.main.height / this.backgroundImage.height
     const scale = Math.max(scaleX, scaleY)
     this.backgroundImage.setScale(scale)
     
-    // 居中背景
+    // Center background
     this.backgroundImage.setPosition(
       (this.cameras.main.width - this.backgroundImage.displayWidth) / 2,
       (this.cameras.main.height - this.backgroundImage.displayHeight) / 2
     )
 
-    // 添加颜色滤镜营造氛围
+    // Add color filter for atmosphere
     this.add.rectangle(
       this.cameras.main.centerX,
       this.cameras.main.centerY,
@@ -62,12 +73,12 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   private createTitle() {
-    // 主标题 - 移动端适配
+    // Main title - mobile adaptation
     const titleSize = this.cameras.main.width < 768 ? "36px" : "48px"
     this.titleText = this.add.text(
       this.cameras.main.centerX,
       this.cameras.main.height * 0.15,
-      "🇳🇿 新西兰动物探险",
+      "🇳 New Zealand Wildlife Adventure",
       {
         fontSize: titleSize,
         color: "#4CAF50",
@@ -79,12 +90,12 @@ export class MainMenuScene extends Phaser.Scene {
     this.titleText.setOrigin(0.5)
     this.titleText.setShadow(4, 4, "#1a1a2e", 8, true, true)
 
-    // 副标题 - 移动端适配
+    // Subtitle - mobile adaptation
     const subtitleSize = this.cameras.main.width < 768 ? "18px" : "24px"
     const subtitle = this.add.text(
       this.cameras.main.centerX,
       this.cameras.main.height * 0.22,
-      "探索、收集、学习",
+      "Explore, Collect, Learn",
       {
         fontSize: subtitleSize,
         color: "#ffffff",
@@ -95,7 +106,7 @@ export class MainMenuScene extends Phaser.Scene {
     subtitle.setOrigin(0.5)
     subtitle.setShadow(2, 2, "#000000", 4, true, true)
 
-    // 标题闪烁效果
+    // Title blinking effect
     this.tweens.add({
       targets: this.titleText,
       alpha: 0.7,
@@ -110,32 +121,32 @@ export class MainMenuScene extends Phaser.Scene {
     const centerX = this.cameras.main.centerX
     const centerY = this.cameras.main.centerY
 
-    // 移动端按钮布局适配
+    // Mobile button layout adaptation
     const isMobile = this.cameras.main.width < 768
     const buttonSpacing = isMobile ? 0 : 300
     const buttonY = isMobile ? centerY + 50 : centerY + 100
 
-    // 背包按钮
+    // Backpack button
     this.backpackButton = this.createPixelButton(
       centerX - (buttonSpacing / 2),
       buttonY,
-      "🎒 动物收藏",
+      "Animal Collection",
       0x4CAF50,
       () => this.openBackpack(),
       isMobile
     )
 
-    // 地图按钮
+    // Map button
     this.mapButton = this.createPixelButton(
       centerX + (buttonSpacing / 2),
       buttonY + (isMobile ? 100 : 0),
-      "🗺️ 探索地图",
+      "Explore Map",
       0x2196F3,
       () => this.openMap(),
       isMobile
     )
 
-    // 为按钮添加统计信息
+    // Add statistics to buttons
     this.updateButtonStats()
   }
 
@@ -149,24 +160,24 @@ export class MainMenuScene extends Phaser.Scene {
   ): Phaser.GameObjects.Container {
     const button = this.add.container(x, y)
     
-    // 移动端按钮尺寸适配
+    // Mobile button size adaptation
     const buttonWidth = isMobile ? 280 : 260
     const buttonHeight = isMobile ? 90 : 80
     const fontSize = isMobile ? "20px" : "18px"
     
-    // 按钮背景 - 多层像素效果
+    // Button background - multi-layer pixel effect
     const bgLarge = this.add.rectangle(0, 0, buttonWidth, buttonHeight, color, 0.9)
     const bgMedium = this.add.rectangle(0, 0, buttonWidth - 10, buttonHeight - 10, color, 1)
     const bgSmall = this.add.rectangle(0, 0, buttonWidth - 20, buttonHeight - 20, 0xffffff, 0.1)
     
-    // 边框效果
+    // Border effect
     const border1 = this.add.rectangle(0, 0, buttonWidth, buttonHeight, 0x000000, 0)
     border1.setStrokeStyle(4, 0x000000)
     
     const border2 = this.add.rectangle(0, 0, buttonWidth - 10, buttonHeight - 10, 0x000000, 0)
     border2.setStrokeStyle(2, 0xffffff, 0.3)
 
-    // 按钮文字
+    // Button text
     const buttonText = this.add.text(0, 0, text, {
       fontSize: fontSize,
       color: "#000000",
@@ -176,16 +187,16 @@ export class MainMenuScene extends Phaser.Scene {
     buttonText.setOrigin(0.5)
     buttonText.setShadow(1, 1, "#ffffff", 2, true, true)
 
-    // 组装按钮
+    // Assemble button
     button.add([bgLarge, bgMedium, bgSmall, border1, border2, buttonText])
     
-    // 设置交互 - 移动端增加点击区域
+    // Set interaction - mobile increase hit area
     const hitAreaWidth = isMobile ? buttonWidth + 20 : buttonWidth
     const hitAreaHeight = isMobile ? buttonHeight + 20 : buttonHeight
     button.setSize(hitAreaWidth, hitAreaHeight)
     button.setInteractive({ useHandCursor: true })
 
-    // 悬停效果 - 移动端减少动画幅度
+    // Hover effect - mobile reduce animation amplitude
     const hoverScale = isMobile ? 1.05 : 1.1
     button.on("pointerover", () => {
       this.tweens.add({
@@ -196,7 +207,7 @@ export class MainMenuScene extends Phaser.Scene {
         ease: "Back.easeOut"
       })
       
-      // 按钮发光效果
+      // Button glow effect
       bgMedium.setFillStyle(0xffffff, 0.8)
     })
 
@@ -212,7 +223,7 @@ export class MainMenuScene extends Phaser.Scene {
       bgMedium.setFillStyle(color, 1)
     })
 
-    // 点击效果 - 移动端优化
+    // Click effect - mobile optimization
     button.on("pointerdown", () => {
       this.tweens.add({
         targets: button,
@@ -223,15 +234,13 @@ export class MainMenuScene extends Phaser.Scene {
         ease: "Back.easeOut"
       })
       
-      // 移动端添加触觉反馈
-      if ('vibrate' in navigator) {
-        navigator.vibrate(50)
-      }
+      // Mobile add haptic feedback
+      this.safeVibrate()
       
       callback()
     })
 
-    // 保存文字元素的引用
+    // Save text element reference
     button.setData("textElement", buttonText)
 
     return button
@@ -244,16 +253,16 @@ export class MainMenuScene extends Phaser.Scene {
     const capturedAnimals = gameState.getCapturedAnimals()
     const totalAnimals = gameState.getAllAnimals().length
 
-    // 更新背包按钮文字
+    // Update backpack button text
     const backpackText = this.backpackButton.getData("textElement") as Phaser.GameObjects.Text
     if (backpackText) {
-      backpackText.setText(`🎒 动物收藏 (${capturedAnimals.length}/${totalAnimals})`)
+      backpackText.setText(`Animal Collection (${capturedAnimals.length}/${totalAnimals})`)
     }
 
-    // 更新地图按钮文字
+    // Update map button text
     const mapText = this.mapButton.getData("textElement") as Phaser.GameObjects.Text
     if (mapText) {
-      mapText.setText("🗺️ 探索地图")
+      mapText.setText(" Explore Map")
     }
   }
 

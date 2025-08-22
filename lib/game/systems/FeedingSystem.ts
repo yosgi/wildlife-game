@@ -29,15 +29,15 @@ export class FeedingSystem {
 
   private initializeFoodItems() {
     const foods: FoodItem[] = [
-      { id: "insects", name: "昆虫", type: "insect", sprite: "food-insects", nutritionValue: 2 },
-      { id: "worms", name: "蚯蚓", type: "insect", sprite: "food-worms", nutritionValue: 3 },
-      { id: "berries", name: "浆果", type: "plant", sprite: "food-berries", nutritionValue: 2 },
-      { id: "leaves", name: "叶子", type: "plant", sprite: "food-leaves", nutritionValue: 1 },
-      { id: "flowers", name: "花朵", type: "plant", sprite: "food-flowers", nutritionValue: 2 },
-      { id: "fruits", name: "果实", type: "plant", sprite: "food-fruits", nutritionValue: 3 },
-      { id: "fish", name: "鱼类", type: "fish", sprite: "food-fish", nutritionValue: 4 },
-      { id: "squid", name: "鱿鱼", type: "fish", sprite: "food-squid", nutritionValue: 3 },
-      { id: "small-reptiles", name: "小型爬行动物", type: "meat", sprite: "food-reptiles", nutritionValue: 4 },
+      { id: "insects", name: "Insects", type: "insect", sprite: "food-insects", nutritionValue: 2 },
+      { id: "worms", name: "Worms", type: "insect", sprite: "food-worms", nutritionValue: 3 },
+      { id: "berries", name: "Berries", type: "plant", sprite: "food-berries", nutritionValue: 2 },
+      { id: "leaves", name: "Leaves", type: "plant", sprite: "food-leaves", nutritionValue: 1 },
+      { id: "flowers", name: "Flowers", type: "plant", sprite: "food-flowers", nutritionValue: 2 },
+      { id: "fruits", name: "Fruits", type: "plant", sprite: "food-fruits", nutritionValue: 3 },
+      { id: "fish", name: "Fish", type: "fish", sprite: "food-fish", nutritionValue: 4 },
+      { id: "squid", name: "Squid", type: "fish", sprite: "food-squid", nutritionValue: 3 },
+      { id: "small-reptiles", name: "Small reptiles", type: "meat", sprite: "food-reptiles", nutritionValue: 4 },
     ]
 
     foods.forEach((food) => {
@@ -56,7 +56,7 @@ export class FeedingSystem {
 
     // Title
     const title = this.scene.add
-      .text(0, -180, `喂养 ${animal.name}`, {
+      .text(0, -180, `Feed ${animal.name}`, {
         fontSize: "18px",
         color: "#4CAF50",
         fontStyle: "bold",
@@ -65,7 +65,7 @@ export class FeedingSystem {
 
     // Animal preferences
     const dietText = this.scene.add
-      .text(0, -150, `喜欢: ${animal.diet.join("、")}`, {
+      .text(0, -150, `Likes: ${animal.diet.join("、")}`, {
         fontSize: "14px",
         color: "#ffffff",
         wordWrap: { width: 280 },
@@ -83,7 +83,7 @@ export class FeedingSystem {
     const feedingZoneBorder = this.scene.add.rectangle(0, 80, 200, 100).setStrokeStyle(2, 0x4caf50)
 
     const feedingZoneText = this.scene.add
-      .text(0, 80, "拖拽食物到这里", {
+      .text(0, 80, "Drag food here", {
         fontSize: "14px",
         color: "#4CAF50",
       })
@@ -172,15 +172,15 @@ export class FeedingSystem {
 
   private mapDietToTypes(diet: string[]): string[] {
     const typeMap: Record<string, string> = {
-      昆虫: "insect",
-      蚯蚓: "insect",
-      浆果: "plant",
-      叶子: "plant",
-      花朵: "plant",
-      果实: "plant",
-      鱼类: "fish",
-      鱿鱼: "fish",
-      小型爬行动物: "meat",
+      Insects: "insect",
+      Worms: "insect",
+      Berries: "plant",
+      Leaves: "plant",
+      Flowers: "plant",
+      Fruits: "plant",
+      Fish: "fish",
+      Squid: "fish",
+      "Small reptiles": "meat",
     }
 
     return diet.map((item) => typeMap[item]).filter(Boolean)
@@ -273,21 +273,21 @@ export class FeedingSystem {
       return {
         success: true,
         intimacyGain: food.nutritionValue * 2,
-        message: `${animal.name}非常喜欢${food.name}！`,
+        message: `${animal.name} loves ${food.name}!`,
         effect: "happy",
       }
     } else if (isCompatible) {
       return {
         success: true,
         intimacyGain: food.nutritionValue,
-        message: `${animal.name}吃了${food.name}`,
+        message: `${animal.name} ate ${food.name}`,
         effect: "neutral",
       }
     } else {
       return {
         success: false,
         intimacyGain: 0,
-        message: `${animal.name}不喜欢${food.name}`,
+        message: `${animal.name} doesn't like ${food.name}`,
         effect: "dislike",
       }
     }
@@ -321,7 +321,7 @@ export class FeedingSystem {
     // Intimacy gain (if successful)
     if (result.success && result.intimacyGain > 0) {
       const intimacyText = this.scene.add
-        .text(centerX, centerY + 15, `亲密度 +${result.intimacyGain}`, {
+        .text(centerX, centerY + 15, `Intimacy +${result.intimacyGain}`, {
           fontSize: "14px",
           color: "#ffffff",
         })

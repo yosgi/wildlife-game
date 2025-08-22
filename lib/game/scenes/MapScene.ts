@@ -10,6 +10,17 @@ export class MapScene extends Phaser.Scene {
   private infoPanel?: Phaser.GameObjects.Container
   private selectedRegion: "north" | "south" | null = null
 
+  // Safe haptic feedback function
+  private safeVibrate(duration: number = 50) {
+    if ('vibrate' in navigator && typeof navigator.vibrate === 'function') {
+      try {
+        navigator.vibrate(duration)
+      } catch (error) {
+        console.log('Vibration not supported:', error)
+      }
+    }
+  }
+
   constructor() {
     super({ key: "MapScene" })
   }
@@ -46,10 +57,10 @@ export class MapScene extends Phaser.Scene {
 
     this.createEnvironmentalElements()
 
-    // Add enhanced title with pixel font styling - 移动端适配
+    // Add enhanced title with pixel font styling - mobile adaptation
     const titleSize = this.cameras.main.width < 768 ? "28px" : "36px"
     const titleText = this.add
-      .text(this.cameras.main.centerX, this.cameras.main.width < 768 ? 40 : 60, "新西兰动物探险", {
+      .text(this.cameras.main.centerX, this.cameras.main.width < 768 ? 40 : 60, "New Zealand Wildlife Adventure", {
         fontSize: titleSize,
         color: "#ffffff",
         fontStyle: "bold",
@@ -59,7 +70,7 @@ export class MapScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(10)
 
-    // 添加返回主菜单按钮
+    // Add back to main menu button
     this.createBackButton()
 
     this.tweens.add({
@@ -79,10 +90,10 @@ export class MapScene extends Phaser.Scene {
 
     this.createAnimalHabitats()
 
-    // Add enhanced instructions - 移动端适配
+    // Add enhanced instructions - mobile adaptation
     const instructionSize = this.cameras.main.width < 768 ? "16px" : "20px"
     this.add
-      .text(this.cameras.main.centerX, this.cameras.main.height - (this.cameras.main.width < 768 ? 60 : 80), "选择岛屿开始你的新西兰动物探险之旅", {
+      .text(this.cameras.main.centerX, this.cameras.main.height - (this.cameras.main.width < 768 ? 60 : 80), "Select an island to begin your New Zealand wildlife adventure", {
         fontSize: instructionSize,
         color: "#ffffff",
         stroke: "#000000",
@@ -93,7 +104,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   private createBackButton() {
-    // 创建返回主菜单按钮 - 移动端适配
+    // Create back to main menu button - mobile adaptation
     const isMobile = this.cameras.main.width < 768
     const buttonX = isMobile ? 60 : 80
     const buttonY = isMobile ? 40 : 60
@@ -103,13 +114,13 @@ export class MapScene extends Phaser.Scene {
     
     const backButton = this.add.container(buttonX, buttonY).setDepth(20)
     
-    // 按钮背景
+    // Button background
     const buttonBg = this.add.rectangle(0, 0, buttonWidth, buttonHeight, 0x4caf50, 0.9)
     const buttonBorder = this.add.rectangle(0, 0, buttonWidth, buttonHeight, 0x000000, 0)
     buttonBorder.setStrokeStyle(2, 0x2e7d32)
     
-    // 按钮文字
-    const buttonText = this.add.text(0, 0, "← 主菜单", {
+    // Button text
+    const buttonText = this.add.text(0, 0, "← Main Menu", {
       fontSize: fontSize,
       color: "#000000",
       fontStyle: "bold"
@@ -117,13 +128,13 @@ export class MapScene extends Phaser.Scene {
     
     backButton.add([buttonBg, buttonBorder, buttonText])
     
-    // 设置交互 - 移动端增加点击区域
+    // Set interaction - mobile increase click area
     const hitAreaWidth = isMobile ? buttonWidth + 10 : buttonWidth
     const hitAreaHeight = isMobile ? buttonHeight + 10 : buttonHeight
     backButton.setSize(hitAreaWidth, hitAreaHeight)
     backButton.setInteractive({ useHandCursor: true })
     
-    // 悬停效果
+    // Hover effect
     backButton.on("pointerover", () => {
       this.tweens.add({
         targets: backButton,
@@ -146,12 +157,10 @@ export class MapScene extends Phaser.Scene {
       buttonBg.setFillStyle(0x4caf50, 0.9)
     })
     
-    // 点击事件
+    // Click event
     backButton.on("pointerdown", () => {
-      // 移动端添加触觉反馈
-      if ('vibrate' in navigator) {
-        navigator.vibrate(30)
-      }
+      // Mobile add haptic feedback
+      this.safeVibrate(30)
       this.scene.start("MainMenuScene")
     })
   }
@@ -299,7 +308,7 @@ export class MapScene extends Phaser.Scene {
 
     // 添加标签
     this.add
-      .text(centerX - 80, centerY - 40, "北岛\nNorth Island", {
+      .text(centerX - 80, centerY - 40, "North Island", {
         fontSize: "16px",
         color: "#ffffff",
         fontStyle: "bold",
@@ -311,7 +320,7 @@ export class MapScene extends Phaser.Scene {
       .setDepth(10)
 
     this.add
-      .text(centerX + 80, centerY + 60, "南岛\nSouth Island", {
+      .text(centerX + 80, centerY + 60, "South Island", {
         fontSize: "16px",
         color: "#ffffff",
         fontStyle: "bold",
@@ -437,12 +446,12 @@ export class MapScene extends Phaser.Scene {
 
     const regionData = {
       north: {
-        title: "北岛 (North Island)",
-        content: "🌿 温带海洋性气候\n🏞️ 森林、草原和火山\n🐦 几维鸟和楔齿蜥的家园\n🌡️ 温暖湿润，适合多样生物",
+        title: "North Island",
+        content: "🌿 Temperate oceanic climate\n🏞️ Forests, grasslands and volcanoes\n🐦 Home to kiwi and tuatara\n🌡️ Warm and humid, suitable for diverse life",
       },
       south: {
-        title: "南岛 (South Island)",
-        content: "🏔️ 壮丽的山脉和峡湾\n🌊 丰富的海洋生态\n🐧 企鹅和鸮鹦鹉栖息地\n❄️ 气候凉爽，地形多样",
+        title: "South Island",
+        content: "🏔️ Magnificent mountains and fjords\n🌊 Rich marine ecosystems\n🐧 Penguin and kakapo habitat\n❄️ Cool climate, diverse terrain",
       },
     }
 
@@ -477,10 +486,10 @@ export class MapScene extends Phaser.Scene {
 
   private showAnimalInfo(animal: string, x: number, y: number) {
     const animalData: Record<string, string> = {
-      kiwi: "几维鸟 - 新西兰国鸟",
-      penguin: "黄眼企鹅 - 稀有物种",
-      kakapo: "鸮鹦鹉 - 不会飞的鹦鹉",
-      tuatara: "楔齿蜥 - 活化石",
+      kiwi: "Kiwi - New Zealand's national bird",
+      penguin: "Yellow-eyed Penguin - Rare species",
+      kakapo: "Kakapo - Flightless parrot",
+      tuatara: "Tuatara - Living fossil",
     }
 
     const tooltip = this.add
@@ -511,9 +520,9 @@ export class MapScene extends Phaser.Scene {
     if (this.gameManager) {
       this.gameManager.getGameState().setCurrentRegion(region)
 
-      const regionText = region === "north" ? "北岛" : "南岛"
+      const regionText = region === "north" ? "North Island" : "South Island"
       const feedbackText = this.add
-        .text(this.cameras.main.centerX, this.cameras.main.centerY - 150, `已选择${regionText}！`, {
+        .text(this.cameras.main.centerX, this.cameras.main.centerY - 150, `Selected ${regionText}!`, {
           fontSize: "24px",
           color: "#ffff00",
           fontStyle: "bold",
@@ -533,7 +542,7 @@ export class MapScene extends Phaser.Scene {
       })
 
       const progressText = this.add
-        .text(this.cameras.main.centerX, this.cameras.main.centerY - 120, "准备进入AR模式...", {
+        .text(this.cameras.main.centerX, this.cameras.main.centerY - 120, "Preparing to enter AR mode...", {
           fontSize: "16px",
           color: "#ffffff",
           stroke: "#000000",
