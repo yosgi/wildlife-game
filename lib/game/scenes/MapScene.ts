@@ -6,7 +6,6 @@ export class MapScene extends Phaser.Scene {
   private gameManager: any
   private animalMarkers!: Phaser.GameObjects.Group
   private clouds!: Phaser.GameObjects.Group
-  private waves!: Phaser.GameObjects.Group
   private infoPanel?: Phaser.GameObjects.Container
   private selectedRegion: "north" | "south" | null = null
 
@@ -37,6 +36,7 @@ export class MapScene extends Phaser.Scene {
 
     // Environment elements
     this.load.image("cloud", "/pixel-cloud.png")
+    this.load.image("cloud1", "/cloud1.png")
     this.load.image("wave", "/pixel-wave.png")
     this.load.image("tree", "/pixel-tree.png")
     this.load.image("mountain", "/pixel-mountain.png")
@@ -53,35 +53,11 @@ export class MapScene extends Phaser.Scene {
 
     this.animalMarkers = this.add.group()
     this.clouds = this.add.group()
-    this.waves = this.add.group()
 
     this.createEnvironmentalElements()
 
-    // Add enhanced title with pixel font styling - mobile adaptation
-    const titleSize = this.cameras.main.width < 768 ? "28px" : "36px"
-    const titleText = this.add
-      .text(this.cameras.main.centerX, this.cameras.main.width < 768 ? 40 : 60, "New Zealand Wildlife Adventure", {
-        fontSize: titleSize,
-        color: "#ffffff",
-        fontStyle: "bold",
-        stroke: "#000000",
-        strokeThickness: 3,
-      })
-      .setOrigin(0.5)
-      .setDepth(10)
-
     // Add back to main menu button
     this.createBackButton()
-
-    this.tweens.add({
-      targets: titleText,
-      scaleX: 1.1,
-      scaleY: 1.1,
-      duration: 2000,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-    })
 
     // Create enhanced islands with better interactions
     this.createEnhancedIslands()
@@ -89,18 +65,6 @@ export class MapScene extends Phaser.Scene {
     this.createInfoPanel()
 
     this.createAnimalHabitats()
-
-    // Add enhanced instructions - mobile adaptation
-    const instructionSize = this.cameras.main.width < 768 ? "16px" : "20px"
-    this.add
-      .text(this.cameras.main.centerX, this.cameras.main.height - (this.cameras.main.width < 768 ? 60 : 80), "Select an island to begin your New Zealand wildlife adventure", {
-        fontSize: instructionSize,
-        color: "#ffffff",
-        stroke: "#000000",
-        strokeThickness: 2,
-      })
-      .setOrigin(0.5)
-      .setDepth(10)
   }
 
   private createBackButton() {
@@ -180,9 +144,9 @@ export class MapScene extends Phaser.Scene {
   private createEnvironmentalElements() {
     for (let i = 0; i < 5; i++) {
       const cloud = this.add
-        .image(Phaser.Math.Between(0, this.cameras.main.width), Phaser.Math.Between(50, 200), "cloud")
-        .setScale(0.05)
-        .setAlpha(0.7)
+        .image(Phaser.Math.Between(0, this.cameras.main.width), Phaser.Math.Between(50, 200), "cloud1")
+        .setScale(Phaser.Math.Between(0.4, 0.7))
+        .setAlpha(0.8)
         .setDepth(5)
 
       this.clouds.add(cloud)
@@ -196,31 +160,8 @@ export class MapScene extends Phaser.Scene {
         onRepeat: () => {
           cloud.x = -100
           cloud.y = Phaser.Math.Between(50, 200)
+          cloud.setScale(Phaser.Math.Between(0.4, 0.7))
         },
-      })
-    }
-
-    for (let i = 0; i < 8; i++) {
-      const wave = this.add
-        .image(
-          Phaser.Math.Between(0, this.cameras.main.width),
-          this.cameras.main.centerY + Phaser.Math.Between(100, 200),
-          "wave",
-        )
-        .setScale(0.05)
-        .setAlpha(0.5)
-        .setDepth(1)
-
-      this.waves.add(wave)
-
-      // 水波左右来回移动
-      this.tweens.add({
-        targets: wave,
-        x: wave.x + Phaser.Math.Between(-50, 50),
-        duration: Phaser.Math.Between(3000, 6000),
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
       })
     }
   }
@@ -236,14 +177,14 @@ export class MapScene extends Phaser.Scene {
       .setDepth(2)
       .setAlpha(0.8)
 
-    // 创建北岛选择区域
+    // 创建北岛选择区域 - 调整间距为50px
     const northButton = this.add
-      .rectangle(centerX - 80, centerY - 40, 160, 80, 0x4caf50, 0.7)
+      .rectangle(centerX - 25, centerY - 40, 160, 80, 0x4caf50, 0.7)
       .setStrokeStyle(3, 0xffffff)
       .setInteractive({ useHandCursor: true })
       .setDepth(3)
 
-    const northGlow = this.add.circle(centerX - 80, centerY - 40, 85, 0x4caf50, 0.1).setDepth(2)
+    const northGlow = this.add.circle(centerX - 25, centerY - 40, 85, 0x4caf50, 0.1).setDepth(2)
 
     northButton.on("pointerdown", () => {
       this.selectRegion("north")
@@ -271,14 +212,14 @@ export class MapScene extends Phaser.Scene {
       this.hideRegionInfo()
     })
 
-    // 创建南岛选择区域
+    // 创建南岛选择区域 - 调整间距为50px
     const southButton = this.add
-      .rectangle(centerX + 80, centerY + 60, 160, 100, 0x2196f3, 0.7)
+      .rectangle(centerX + 25, centerY + 60, 160, 100, 0x2196f3, 0.7)
       .setStrokeStyle(3, 0xffffff)
       .setInteractive({ useHandCursor: true })
       .setDepth(3)
 
-    const southGlow = this.add.circle(centerX + 80, centerY + 60, 90, 0x2196f3, 0.1).setDepth(2)
+    const southGlow = this.add.circle(centerX + 25, centerY + 60, 90, 0x2196f3, 0.1).setDepth(2)
 
     southButton.on("pointerdown", () => {
       this.selectRegion("south")
@@ -306,9 +247,9 @@ export class MapScene extends Phaser.Scene {
       this.hideRegionInfo()
     })
 
-    // 添加标签
+    // 添加标签 - 调整位置对应新的按钮位置
     this.add
-      .text(centerX - 80, centerY - 40, "North Island", {
+      .text(centerX - 25, centerY - 40, "North Island", {
         fontSize: "16px",
         color: "#ffffff",
         fontStyle: "bold",
@@ -320,7 +261,7 @@ export class MapScene extends Phaser.Scene {
       .setDepth(10)
 
     this.add
-      .text(centerX + 80, centerY + 60, "South Island", {
+      .text(centerX + 25, centerY + 60, "South Island", {
         fontSize: "16px",
         color: "#ffffff",
         fontStyle: "bold",
@@ -342,12 +283,12 @@ export class MapScene extends Phaser.Scene {
     const isMobile = this.cameras.main.width < 768
 
     const habitats = [
-      // 北岛动物 - 重新定位避免重叠
-      { x: centerX - 100, y: centerY - 80, animal: "kiwi", region: "north" },
-      { x: centerX - 60, y: centerY - 20, animal: "tuatara", region: "north" },
-      // 南岛动物 - 重新定位避免重叠
-      { x: centerX + 60, y: centerY + 40, animal: "kakapo", region: "south" },
-      { x: centerX + 100, y: centerY + 80, animal: "penguin", region: "south" },
+      // 北岛动物 - 调整位置对应新的按钮位置
+      { x: centerX - 45, y: centerY - 80, animal: "kiwi", region: "north" },
+      { x: centerX - 5, y: centerY - 20, animal: "tuatara", region: "north" },
+      // 南岛动物 - 调整位置对应新的按钮位置
+      { x: centerX + 5, y: centerY + 40, animal: "kakapo", region: "south" },
+      { x: centerX + 45, y: centerY + 80, animal: "penguin", region: "south" },
     ]
 
     habitats.forEach((habitat, index) => {
@@ -578,11 +519,6 @@ export class MapScene extends Phaser.Scene {
   }
 
   update() {
-    // Update wave positions and animations
-    this.waves.children.entries.forEach((wave: any) => {
-      if (wave.x > this.cameras.main.width + 50) {
-        wave.x = -50
-      }
-    })
+    // Update cloud positions if needed
   }
 }

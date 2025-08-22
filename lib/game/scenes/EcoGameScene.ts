@@ -33,6 +33,16 @@ export class EcoGameScene extends Phaser.Scene {
     super({ key: "EcoGameScene" })
   }
 
+  preload() {
+    // Load forest tileset
+    this.load.image("forest", "/forest.png")
+    // Load cloud tileset
+    this.load.image("cloud1", "/cloud1.png")
+    // Load other environment assets if they exist
+    this.load.image("cloud", "/pixel-cloud.png")
+    this.load.image("wave", "/pixel-wave.png")
+  }
+
   init() {
     // Clean up any leftover elements when scene initializes
     const existingUI = document.querySelector('.eco-game-ui')
@@ -119,7 +129,7 @@ export class EcoGameScene extends Phaser.Scene {
     for (let i = 0; i < 5; i++) {
       const wave = this.add.ellipse(
         Phaser.Math.Between(0, this.scale.width),
-        Phaser.Math.Between(0, this.scale.height),
+        Phaser.Math.Between(this.scale.height * 0.6, this.scale.height),
         Phaser.Math.Between(50, 100),
         20,
         0x5BA3F5,
@@ -139,104 +149,243 @@ export class EcoGameScene extends Phaser.Scene {
       // Store reference for cleanup
       this.waveTweens.push(waveTween)
     }
+    
+    // Add clouds in the sky using cloud1.png tileset
+    for (let i = 0; i < 5; i++) {
+      const cloud = this.add.image(
+        Phaser.Math.Between(0, this.scale.width),
+        Phaser.Math.Between(50, 200),
+        "cloud1"
+      ).setScale(Phaser.Math.Between(0.3, 0.6))
+       .setDepth(-3)
+       .setAlpha(0.8)
+      
+      const cloudTween = this.tweens.add({
+        targets: cloud,
+        x: this.scale.width + 100,
+        duration: Phaser.Math.Between(20000, 30000),
+        repeat: -1,
+        onRepeat: () => {
+          cloud.x = -100
+          cloud.y = Phaser.Math.Between(50, 200)
+          cloud.setScale(Phaser.Math.Between(0.3, 0.6))
+        }
+      })
+      
+      this.waveTweens.push(cloudTween) // Reuse waveTweens array for all background tweens
+    }
   }
 
   private createIslands() {
     const centerX = this.scale.width / 2
     const centerY = this.scale.height / 2
     
-    // Predator Island (left)
+    // Predator Island (left) - doubled in size
     const predatorIsland = this.add.ellipse(
-      centerX - 200, centerY,
-      180, 120,
-      0x8B4513
+      centerX - 300, centerY,
+      560, 400,
+      0x654321
     ).setDepth(1)
     
-    // Add predator symbols
-    for (let i = 0; i < this.predators; i++) {
-      const predator = this.add.text(
-        centerX - 220 + i * 20, centerY - 10,
-        '🐺', { fontSize: '20px' }
+    // Add barren/rocky landscape elements to predator island - spread over larger area
+    const rockPositions = [
+      { x: -160, y: -80 }, { x: -80, y: -120 }, { x: 0, y: -60 },
+      { x: 80, y: -100 }, { x: 160, y: -40 }, { x: -120, y: 40 },
+      { x: 40, y: 80 }, { x: 120, y: 60 }, { x: -40, y: 120 },
+      { x: 100, y: 140 }, { x: -100, y: -20 }, { x: 60, y: -60 }
+    ]
+    
+    rockPositions.forEach((pos, i) => {
+      const rock = this.add.ellipse(
+        centerX - 300 + pos.x, centerY + pos.y,
+        Phaser.Math.Between(12, 20), Phaser.Math.Between(8, 15),
+        0x8B7355
       ).setDepth(2)
+    })
+    
+    // Add some dead/burnt trees to make it look realistic but dangerous - more spread out
+    const deadTreePositions = [
+      { x: -100, y: -40 }, { x: 60, y: -70 }, { x: -40, y: 50 }, 
+      { x: 100, y: 30 }, { x: -140, y: 80 }, { x: 140, y: -20 }
+    ]
+    
+    deadTreePositions.forEach(pos => {
+      const deadTree = this.add.text(
+        centerX - 300 + pos.x, centerY + pos.y,
+        '🥀', { fontSize: '16px' }
+      ).setOrigin(0.5).setDepth(3).setAlpha(0.8)
+    })
+    
+    // Add some sparse, dry grass - spread over larger area
+    for (let i = 0; i < 10; i++) {
+      const grass = this.add.text(
+        centerX - 300 + Phaser.Math.Between(-200, 200),
+        centerY + Phaser.Math.Between(-140, 140),
+        '🌾', 
+        { fontSize: '12px' }
+      ).setOrigin(0.5).setDepth(2).setAlpha(0.6)
     }
     
-    // Safe Island (right) - with plants and birds
+    // Spread predators more across the larger island
+    const predatorPositions = [
+      { x: -140, y: -20 }, { x: 0, y: 30 }, { x: 140, y: -50 },
+      { x: -70, y: 100 }, { x: 70, y: -100 }
+    ]
+    
+    for (let i = 0; i < this.predators && i < predatorPositions.length; i++) {
+      const pos = predatorPositions[i]
+      const predator = this.add.text(
+        centerX - 300 + pos.x, centerY + pos.y,
+        ['🐺', '🦅', '🐱'][i % 3], 
+        { fontSize: '22px' }
+      ).setOrigin(0.5).setDepth(4)
+    }
+    
+    // Safe Island (right) - doubled in size
     const safeIsland = this.add.ellipse(
-      centerX + 200, centerY,
-      180, 120,
+      centerX + 300, centerY,
+      640, 480,
       0x228B22
     ).setDepth(1)
     
-    // Add trees
-    for (let i = 0; i < this.trees; i++) {
-      const tree = this.add.text(
-        centerX + 180 + (i % 3) * 25, 
-        centerY - 20 + Math.floor(i / 3) * 25,
-        '🌳', { fontSize: '16px' }
-      ).setDepth(2)
+    // Reduce forest backgrounds by half - only 3 instead of 5
+    const forestPositions = [
+      { x: -100, y: -60, scale: 0.6 },
+      { x: 100, y: -80, scale: 0.5 },
+      { x: 0, y: 40, scale: 0.7 }
+    ]
+    
+    forestPositions.forEach(pos => {
+      const forestBg = this.add.image(
+        centerX + 300 + pos.x, centerY + pos.y, "forest"
+      ).setScale(pos.scale)
+       .setDepth(2)
+       .setAlpha(0.7)
+    })
+    
+    // Reduce trees by half - 9 instead of 18, spread over larger area
+    const treePositions = [
+      { x: -240, y: -120, type: 'forest' }, { x: -160, y: -80, type: 'emoji' },
+      { x: -80, y: -140, type: 'emoji' }, { x: 0, y: -100, type: 'forest' },
+      { x: 80, y: -130, type: 'emoji' }, { x: 160, y: -90, type: 'forest' },
+      { x: 240, y: -110, type: 'emoji' }, { x: -120, y: 100, type: 'forest' },
+      { x: 120, y: 120, type: 'emoji' }
+    ]
+    
+    for (let i = 0; i < this.trees && i < treePositions.length; i++) {
+      const pos = treePositions[i]
+      const x = centerX + 300 + pos.x
+      const y = centerY + pos.y
+      
+      if (pos.type === 'forest') {
+        // Use smaller forest pieces
+        const forestPiece = this.add.image(x, y, "forest")
+          .setScale(0.15)
+          .setDepth(3)
+      } else {
+        // Use emoji trees with variety
+        const treeEmojis = ['🌳', '🌲', '🌴']
+        const tree = this.add.text(x, y, treeEmojis[i % 3], { 
+          fontSize: Phaser.Math.Between(16, 20) + 'px' 
+        }).setOrigin(0.5).setDepth(3)
+      }
     }
     
-    // Add birds
-    const birdCount = Math.min(5, Math.floor(this.birdPopulation / 10))
-    for (let i = 0; i < birdCount; i++) {
+    // Reduce flowers by half - 4 instead of 8, spread over larger area
+    for (let i = 0; i < 4; i++) {
+      const flower = this.add.text(
+        centerX + 300 + Phaser.Math.Between(-280, 280),
+        centerY + Phaser.Math.Between(-180, 180),
+        ['🌸', '🌺', '🌻', '🌷'][i % 4],
+        { fontSize: '14px' }
+      ).setOrigin(0.5).setDepth(3).setAlpha(0.8)
+    }
+    
+    // Reduce birds by half - 4 instead of 8, spread over larger area
+    const birdCount = Math.min(4, Math.floor(this.birdPopulation / 16))
+    const birdPositions = [
+      { x: -180, y: 80 }, { x: -60, y: 100 }, 
+      { x: 60, y: 90 }, { x: 180, y: 110 }
+    ]
+    
+    for (let i = 0; i < birdCount && i < birdPositions.length; i++) {
+      const pos = birdPositions[i]
       const bird = this.add.text(
-        centerX + 160 + i * 15, centerY + 20,
-        '🐦', { fontSize: '12px' }
-      ).setDepth(2)
+        centerX + 300 + pos.x, centerY + pos.y,
+        ['🐦', '🕊️', '🐤'][i % 3], 
+        { fontSize: '16px' }
+      ).setOrigin(0.5).setDepth(5)
       
-      // Add flying animation
+      // Add flying animation with random delays
       const birdTween = this.tweens.add({
         targets: bird,
-        y: bird.y - 10,
-        duration: 1000,
+        y: bird.y - Phaser.Math.Between(5, 12),
+        duration: Phaser.Math.Between(1200, 2000),
         yoyo: true,
         repeat: -1,
-        ease: 'Sine.easeInOut'
+        ease: 'Sine.easeInOut',
+        delay: Phaser.Math.Between(0, 1000)
       })
       
       // Store reference for cleanup
       this.birdTweens.push(birdTween)
     }
     
-    // Island labels
-    this.add.text(centerX - 200, centerY + 80, 'Danger Zone', {
-      fontSize: '14px',
+    // Island labels with better positioning for larger islands
+    this.add.text(centerX - 300, centerY + 220, 'WASTELAND', {
+      fontSize: '18px',
       color: '#ff0000',
-      fontStyle: 'bold'
-    }).setOrigin(0.5).setDepth(3)
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 3
+    }).setOrigin(0.5).setDepth(6)
     
-    this.add.text(centerX + 200, centerY + 80, 'Safe Haven', {
-      fontSize: '14px', 
+    this.add.text(centerX + 300, centerY + 260, 'FOREST SANCTUARY', {
+      fontSize: '18px', 
       color: '#00ff00',
-      fontStyle: 'bold'
-    }).setOrigin(0.5).setDepth(3)
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 3
+    }).setOrigin(0.5).setDepth(6)
   }
 
   private createKakapo() {
     const centerX = this.scale.width / 2
     const centerY = this.scale.height / 2
     
-    // Create kakapo on predator island (starts in danger)
-    this.kakapo = this.add.sprite(centerX - 200, centerY, '')
-      .setDepth(5)
-      .setInteractive({ draggable: true })
+    // Create kakapo on predator island (starts in danger) - updated position for larger island
+    this.kakapo = this.add.sprite(centerX - 300, centerY, '')
+      .setDepth(10)
+      .setInteractive({ 
+        draggable: true,
+        hitArea: new Phaser.Geom.Circle(0, 0, 25),
+        hitAreaCallback: Phaser.Geom.Circle.Contains,
+        useHandCursor: true
+      })
     
-    // Create kakapo as a colored circle with emoji
+    // Create kakapo as a colored circle with better styling
     const kakapoGraphics = this.add.graphics()
-    kakapoGraphics.fillStyle(0x4a5d23)
-    kakapoGraphics.fillCircle(0, 0, 15)
-    kakapoGraphics.generateTexture('kakapo-sprite', 30, 30)
+    kakapoGraphics.fillStyle(0x4a5d23, 0.9)
+    kakapoGraphics.fillCircle(0, 0, 18)
+    kakapoGraphics.lineStyle(3, 0x2d3a14)
+    kakapoGraphics.strokeCircle(0, 0, 18)
+    kakapoGraphics.generateTexture('kakapo-sprite', 40, 40)
     kakapoGraphics.destroy()
     
     this.kakapo.setTexture('kakapo-sprite')
     
-    // Add kakapo emoji on top
-    const kakapoEmoji = this.add.text(centerX - 200, centerY, '🦜', {
-      fontSize: '24px'
-    }).setOrigin(0.5).setDepth(6)
+    // Add kakapo emoji on top with better size
+    const kakapoEmoji = this.add.text(centerX - 300, centerY, '🦜', {
+      fontSize: '28px'
+    }).setOrigin(0.5).setDepth(11)
     
-    // Make emoji follow kakapo
+    // Add glow effect for when dragging
+    const glowEffect = this.add.circle(centerX - 300, centerY, 25, 0xffff00, 0)
+      .setDepth(9)
+    
+    // Store references
     this.kakapo.setData('emoji', kakapoEmoji)
+    this.kakapo.setData('glow', glowEffect)
   }
 
   private createGameUI() {
@@ -383,6 +532,19 @@ export class EcoGameScene extends Phaser.Scene {
     this.input.on('dragstart', (pointer: any, gameObject: any) => {
       this.isDragging = true
       gameObject.setTint(0xffff00) // Highlight when dragging
+      
+      // Show glow effect
+      const glow = gameObject.getData('glow')
+      if (glow) {
+        glow.setAlpha(0.3)
+        this.tweens.add({
+          targets: glow,
+          scaleX: 1.2,
+          scaleY: 1.2,
+          duration: 200,
+          ease: 'Power2'
+        })
+      }
     })
     
     this.input.on('drag', (pointer: any, gameObject: any, dragX: number, dragY: number) => {
@@ -395,11 +557,31 @@ export class EcoGameScene extends Phaser.Scene {
         emoji.x = dragX
         emoji.y = dragY
       }
+      
+      // Update glow position
+      const glow = gameObject.getData('glow')
+      if (glow) {
+        glow.x = dragX
+        glow.y = dragY
+      }
     })
     
     this.input.on('dragend', (pointer: any, gameObject: any) => {
       this.isDragging = false
       gameObject.clearTint()
+      
+      // Hide glow effect
+      const glow = gameObject.getData('glow')
+      if (glow) {
+        this.tweens.add({
+          targets: glow,
+          alpha: 0,
+          scaleX: 1,
+          scaleY: 1,
+          duration: 300,
+          ease: 'Power2'
+        })
+      }
       
       // Check if kakapo reached safety
       this.checkKakapoSafety()
@@ -410,12 +592,12 @@ export class EcoGameScene extends Phaser.Scene {
   private isKakapoSafe(): boolean {
     const centerX = this.scale.width / 2
     const centerY = this.scale.height / 2
-    const safeZoneX = centerX + 200
+    const safeZoneX = centerX + 300 // Updated to match new larger forest island position
     const distance = Phaser.Math.Distance.Between(
       this.kakapo.x, this.kakapo.y,
       safeZoneX, centerY
     )
-    return distance < 100
+    return distance < 320 // Doubled safe zone for the much larger forest island (640/2)
   }
 
   private checkKakapoSafety() {

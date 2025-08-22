@@ -18,6 +18,7 @@ export class MainMenuScene extends Phaser.Scene {
     // UI元素
     this.load.image("pixel-button", "/pixel-button.png")
     this.load.image("cloud", "/pixel-cloud.png")
+    this.load.image("cloud1", "/cloud1.png")
     this.load.image("wave", "/pixel-wave.png")
   }
 
@@ -46,21 +47,16 @@ export class MainMenuScene extends Phaser.Scene {
     this.backgroundImage = this.add.image(0, 0, "main-bg")
     this.backgroundImage.setOrigin(0, 0)
     
-    // 调整背景大小以适应屏幕
+    // 只按宽度缩放以占满宽度，保持纵横比
     const scaleX = this.cameras.main.width / this.backgroundImage.width
-    const scaleY = this.cameras.main.height / this.backgroundImage.height
-    const scale = Math.max(scaleX, scaleY)
-    this.backgroundImage.setScale(scale)
+    this.backgroundImage.setScale(scaleX)
     
-    // 居中背景
+    // 居中背景（只在Y轴居中，X轴占满）
     this.backgroundImage.setPosition(
-      (this.cameras.main.width - this.backgroundImage.displayWidth) / 2,
+      0, // X轴从0开始，占满宽度
       (this.cameras.main.height - this.backgroundImage.displayHeight) / 2
     )
 
-    // 添加像素化效果
-    this.backgroundImage.setTexture("main-bg")
-    
     // 添加颜色滤镜营造氛围
     this.add.rectangle(
       this.cameras.main.centerX,
@@ -77,7 +73,7 @@ export class MainMenuScene extends Phaser.Scene {
     this.titleText = this.add.text(
       this.cameras.main.centerX,
       this.cameras.main.height * 0.2,
-      "🇳🇿 新西兰动物探险",
+      "WildQuest",
       {
         fontSize: "48px",
         color: "#4CAF50",
@@ -93,7 +89,7 @@ export class MainMenuScene extends Phaser.Scene {
     const subtitle = this.add.text(
       this.cameras.main.centerX,
       this.cameras.main.height * 0.28,
-      "探索、收集、学习",
+      "Chat • Collect • Play • Learn",
       {
         fontSize: "24px",
         color: "#ffffff",
@@ -103,36 +99,26 @@ export class MainMenuScene extends Phaser.Scene {
     )
     subtitle.setOrigin(0.5)
     subtitle.setShadow(2, 2, "#000000", 4, true, true)
-
-    // 标题闪烁效果
-    this.tweens.add({
-      targets: this.titleText,
-      alpha: 0.7,
-      duration: 2000,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut"
-    })
   }
 
   private createButtons() {
     const centerX = this.cameras.main.centerX
     const centerY = this.cameras.main.centerY
 
-    // 背包按钮
+    // 背包按钮 - 左侧，考虑按钮宽度260px + 50px间距
     this.backpackButton = this.createPixelButton(
-      centerX - 150,
-      centerY + 100,
-      "🎒 动物收藏",
+      centerX - 185, // (260/2 + 25) = 155px 偏移
+      centerY + 200, // 增加Y偏移量以增加与标题的间距（3倍）
+      "Collection",
       0x4CAF50,
       () => this.openBackpack()
     )
 
-    // 地图按钮
+    // 地图按钮 - 右侧，考虑按钮宽度260px + 50px间距
     this.mapButton = this.createPixelButton(
-      centerX + 150,
-      centerY + 100,
-      "🗺️ 探索地图",
+      centerX + 185, // (260/2 + 25) = 155px 偏移
+      centerY + 200, // 增加Y偏移量以增加与标题的间距（3倍）
+      "Explore Map",
       0x2196F3,
       () => this.openMap()
     )
@@ -225,14 +211,14 @@ export class MainMenuScene extends Phaser.Scene {
 
   private createAnimations() {
     // 创建飘动的云朵
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       const cloud = this.add.image(
         Phaser.Math.Between(-100, this.cameras.main.width + 100),
         Phaser.Math.Between(50, 200),
-        "cloud"
+        "cloud1"
       )
-      cloud.setScale(0.05 + Math.random() * 0.05) // 调整为 0.05-0.1 的小范围
-      cloud.setAlpha(0.3 + Math.random() * 0.4)
+      cloud.setScale(Phaser.Math.Between(0.3, 0.6))
+      cloud.setAlpha(0.6 + Math.random() * 0.3)
       
       // 云朵飘动动画
       this.tweens.add({
@@ -240,28 +226,12 @@ export class MainMenuScene extends Phaser.Scene {
         x: cloud.x + Phaser.Math.Between(200, 400),
         duration: Phaser.Math.Between(15000, 25000),
         repeat: -1,
-        ease: "Linear"
-      })
-    }
-
-    // 创建底部波浪动画
-    for (let i = 0; i < 4; i++) {
-      const wave = this.add.image(
-        i * 200 - 100,
-        this.cameras.main.height - 50,
-        "wave"
-      )
-      wave.setScale(1.2)
-      wave.setAlpha(0.4)
-      
-      // 波浪上下动画
-      this.tweens.add({
-        targets: wave,
-        y: wave.y + Phaser.Math.Between(-10, 10),
-        duration: Phaser.Math.Between(2000, 3000),
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut"
+        ease: "Linear",
+        onRepeat: () => {
+          cloud.x = -100
+          cloud.y = Phaser.Math.Between(50, 200)
+          cloud.setScale(Phaser.Math.Between(0.3, 0.6))
+        }
       })
     }
   }
@@ -317,7 +287,7 @@ export class MainMenuScene extends Phaser.Scene {
       const statsText = this.add.text(
         this.backpackButton.x,
         this.backpackButton.y + 60,
-        `已收集: ${capturedAnimals.length}/${totalAnimals}`,
+        `Collected: ${capturedAnimals.length}/${totalAnimals}`,
         {
           fontSize: "14px",
           color: "#ffffff",
