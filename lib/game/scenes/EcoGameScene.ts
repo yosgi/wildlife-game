@@ -366,9 +366,9 @@ export class EcoGameScene extends Phaser.Scene {
     
     // Add three trees in the forest using public/trees assets
     const treePositions = [
-      { x: -150, y: -120, type: 'tree-1' },   // North west area (更分散)
+      { x: -150, y: -120, type: 'tree-1' },   // North west area (more spread out)
       { x: 0, y: -50, type: 'tree-2' },       // North central area  
-      { x: 150, y: 80, type: 'tree-3' }       // South east area (更分散)
+      { x: 150, y: 80, type: 'tree-3' }       // South east area (more spread out)
     ]
     
     treePositions.forEach(treePos => {
