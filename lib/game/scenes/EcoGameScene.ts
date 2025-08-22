@@ -38,7 +38,16 @@ export class EcoGameScene extends Phaser.Scene {
     this.load.image("forest", "/forest.png")
     // Load cloud tileset
     this.load.image("cloud1", "/cloud1.png")
-    // Load other environment assets if they exist
+    
+    // Load individual sprite assets for ecosystems
+    this.load.image("pixel-tree", "/pixel-tree.png")
+    this.load.image("food-flowers", "/food-flowers.png")
+    this.load.image("kiwi-icon", "/pixel-art-kiwi-icon.png")
+    this.load.image("penguin-icon", "/pixel-art-penguin-icon.png")
+    this.load.image("kakapo-icon", "/pixel-art-kakapo-icon.png")
+    this.load.image("tuatara-icon", "/pixel-art-tuatara-icon.png")
+    
+    // Load other environment assets
     this.load.image("cloud", "/pixel-cloud.png")
     this.load.image("wave", "/pixel-wave.png")
   }
@@ -176,145 +185,167 @@ export class EcoGameScene extends Phaser.Scene {
     }
   }
 
+
   private createIslands() {
     const centerX = this.scale.width / 2
     const centerY = this.scale.height / 2
     
-    // Predator Island (left) - doubled in size
-    const predatorIsland = this.add.ellipse(
+    // Grassland Island (left) - changed from wasteland to grassland
+    const grasslandIsland = this.add.ellipse(
       centerX - 300, centerY,
       560, 400,
-      0x654321
+      0x9ACD32  // Changed to grass green color
     ).setDepth(1)
     
-    // Add barren/rocky landscape elements to predator island - spread over larger area
-    const rockPositions = [
-      { x: -160, y: -80 }, { x: -80, y: -120 }, { x: 0, y: -60 },
-      { x: 80, y: -100 }, { x: 160, y: -40 }, { x: -120, y: 40 },
-      { x: 40, y: 80 }, { x: 120, y: 60 }, { x: -40, y: 120 },
-      { x: 100, y: 140 }, { x: -100, y: -20 }, { x: 60, y: -60 }
+    // Add scattered grass clumps using food-flowers with appropriate positioning for grassland animals
+    const grassPositions = [
+      { x: -180, y: -120 }, { x: -100, y: -80 }, { x: -20, y: -140 },
+      { x: 60, y: -100 }, { x: 140, y: -60 }, { x: -160, y: 20 },
+      { x: -80, y: 60 }, { x: 0, y: -20 }, { x: 80, y: 40 },
+      { x: 160, y: 80 }, { x: -120, y: 120 }, { x: 40, y: 140 }
     ]
     
-    rockPositions.forEach((pos, i) => {
-      const rock = this.add.ellipse(
-        centerX - 300 + pos.x, centerY + pos.y,
-        Phaser.Math.Between(12, 20), Phaser.Math.Between(8, 15),
-        0x8B7355
-      ).setDepth(2)
+    grassPositions.forEach((pos, i) => {
+      // Use food-flowers as grass patches with lighter green tint
+      const grass = this.add.image(
+        centerX - 300 + pos.x, centerY + pos.y, "food-flowers"
+      ).setScale(0.06)
+       .setOrigin(0.5)
+       .setDepth(2)
+       .setAlpha(0.7)
+       .setTint(0x7CFC00) // Bright grass green
     })
     
-    // Add some dead/burnt trees to make it look realistic but dangerous - more spread out
-    const deadTreePositions = [
-      { x: -100, y: -40 }, { x: 60, y: -70 }, { x: -40, y: 50 }, 
-      { x: 100, y: 30 }, { x: -140, y: 80 }, { x: 140, y: -20 }
+    // Add some pixel trees sparsely for a mixed grassland-woodland habitat
+    const sparseTreePositions = [
+      { x: -140, y: -40 }, { x: 80, y: -70 }, { x: -60, y: 80 }, 
+      { x: 120, y: 50 }, { x: -100, y: -120 }, { x: 160, y: -20 }
     ]
     
-    deadTreePositions.forEach(pos => {
-      const deadTree = this.add.text(
-        centerX - 300 + pos.x, centerY + pos.y,
-        '🥀', { fontSize: '16px' }
-      ).setOrigin(0.5).setDepth(3).setAlpha(0.8)
+    sparseTreePositions.forEach(pos => {
+      const tree = this.add.image(
+        centerX - 300 + pos.x, centerY + pos.y, "pixel-tree"
+      ).setScale(0.08)
+       .setOrigin(0.5)
+       .setDepth(3)
+       .setAlpha(0.8)
+       .setTint(0x228B22) // Forest green for scattered trees
     })
     
-    // Add some sparse, dry grass - spread over larger area
-    for (let i = 0; i < 10; i++) {
-      const grass = this.add.text(
-        centerX - 300 + Phaser.Math.Between(-200, 200),
-        centerY + Phaser.Math.Between(-140, 140),
-        '🌾', 
-        { fontSize: '12px' }
-      ).setOrigin(0.5).setDepth(2).setAlpha(0.6)
-    }
-    
-    // Spread predators more across the larger island
-    const predatorPositions = [
-      { x: -140, y: -20 }, { x: 0, y: 30 }, { x: 140, y: -50 },
-      { x: -70, y: 100 }, { x: 70, y: -100 }
+    // Place grazing animals (using kiwi and tuatara as grassland animals)
+    const grazingPositions = [
+      { x: -120, y: -20 }, { x: 20, y: 30 }, { x: 100, y: -50 },
+      { x: -40, y: 100 }, { x: 80, y: -100 }
     ]
     
-    for (let i = 0; i < this.predators && i < predatorPositions.length; i++) {
-      const pos = predatorPositions[i]
-      const predator = this.add.text(
+    for (let i = 0; i < this.predators && i < grazingPositions.length; i++) {
+      const pos = grazingPositions[i]
+      const animalTypes = ['kiwi-icon', 'tuatara-icon'] // Ground-dwelling grassland animals
+      const animal = this.add.image(
         centerX - 300 + pos.x, centerY + pos.y,
-        ['🐺', '🦅', '🐱'][i % 3], 
-        { fontSize: '22px' }
-      ).setOrigin(0.5).setDepth(4)
+        animalTypes[i % 2]
+      ).setScale(0.06)
+       .setOrigin(0.5)
+       .setDepth(4)
+       .setAlpha(0.9) // Normal animals, not threatening
     }
     
-    // Safe Island (right) - doubled in size
-    const safeIsland = this.add.ellipse(
+    // Safe Island (right) - forest sanctuary with strategic forest placement
+    const safeIsland = this.add.rectangle(
       centerX + 300, centerY,
       640, 480,
       0x228B22
     ).setDepth(1)
     
-    // Reduce forest backgrounds by half - only 3 instead of 5
-    const forestPositions = [
-      { x: -100, y: -60, scale: 0.6 },
-      { x: 100, y: -80, scale: 0.5 },
-      { x: 0, y: 40, scale: 0.7 }
+    // Strategic forest background placement - create natural clusters for birds
+    const forestClusters = [
+      { x: -120, y: -80, scale: 0.4 }, // North cluster for canopy birds
+      { x: 80, y: -60, scale: 0.35 },  // Northeast cluster  
+      { x: -60, y: 40, scale: 0.45 },  // South cluster for ground foragers
+      { x: 100, y: 80, scale: 0.4 }    // Southeast cluster
     ]
     
-    forestPositions.forEach(pos => {
+    forestClusters.forEach(cluster => {
       const forestBg = this.add.image(
-        centerX + 300 + pos.x, centerY + pos.y, "forest"
-      ).setScale(pos.scale)
+        centerX + 300 + cluster.x, centerY + cluster.y, "forest"
+      ).setScale(cluster.scale)
        .setDepth(2)
-       .setAlpha(0.7)
+       .setAlpha(0.6)
     })
     
-    // Reduce trees by half - 9 instead of 18, spread over larger area
-    const treePositions = [
-      { x: -240, y: -120, type: 'forest' }, { x: -160, y: -80, type: 'emoji' },
-      { x: -80, y: -140, type: 'emoji' }, { x: 0, y: -100, type: 'forest' },
-      { x: 80, y: -130, type: 'emoji' }, { x: 160, y: -90, type: 'forest' },
-      { x: 240, y: -110, type: 'emoji' }, { x: -120, y: 100, type: 'forest' },
-      { x: 120, y: 120, type: 'emoji' }
+    // Individual pixel trees strategically placed for different bird types
+    const strategicTreePositions = [
+      { x: -200, y: -100, type: 'canopy' },   // Tall trees for aerial birds
+      { x: -140, y: -40, type: 'mid' },      // Mid-level for perching
+      { x: -80, y: -120, type: 'canopy' },   // Forest edge
+      { x: 0, y: -80, type: 'mid' },         // Central perching
+      { x: 80, y: -110, type: 'canopy' },    // North edge
+      { x: 140, y: -50, type: 'mid' },       // Open woodland
+      { x: 200, y: -90, type: 'canopy' },    // East canopy
+      { x: -100, y: 60, type: 'under' },     // Understory for ground birds
+      { x: 60, y: 100, type: 'under' }       // Southern understory
     ]
     
-    for (let i = 0; i < this.trees && i < treePositions.length; i++) {
-      const pos = treePositions[i]
+    for (let i = 0; i < this.trees && i < strategicTreePositions.length; i++) {
+      const pos = strategicTreePositions[i]
       const x = centerX + 300 + pos.x
       const y = centerY + pos.y
       
-      if (pos.type === 'forest') {
-        // Use smaller forest pieces
-        const forestPiece = this.add.image(x, y, "forest")
-          .setScale(0.15)
+      if (pos.type === 'canopy') {
+        // Tall canopy trees using pixel-tree - reduced size
+        const tree = this.add.image(x, y, "pixel-tree")
+          .setScale(Phaser.Math.Between(0.10, 0.14))  // Reduced from 0.15-0.20
+          .setOrigin(0.5)
           .setDepth(3)
+          .setTint(0x228B22)
+      } else if (pos.type === 'mid') {
+        // Medium trees using smaller forest pieces
+        const tree = this.add.image(x, y, "forest")
+          .setScale(0.10)  // Reduced from 0.12
+          .setDepth(3)
+          .setAlpha(0.9)
       } else {
-        // Use emoji trees with variety
-        const treeEmojis = ['🌳', '🌲', '🌴']
-        const tree = this.add.text(x, y, treeEmojis[i % 3], { 
-          fontSize: Phaser.Math.Between(16, 20) + 'px' 
-        }).setOrigin(0.5).setDepth(3)
+        // Understory using food-flowers as bushes
+        const bush = this.add.image(x, y, "food-flowers")
+          .setScale(0.06)  // Reduced from 0.08
+          .setOrigin(0.5)
+          .setDepth(3)
+          .setTint(0x32CD32)
+          .setAlpha(0.8)
       }
     }
     
-    // Reduce flowers by half - 4 instead of 8, spread over larger area
-    for (let i = 0; i < 4; i++) {
-      const flower = this.add.text(
-        centerX + 300 + Phaser.Math.Between(-280, 280),
-        centerY + Phaser.Math.Between(-180, 180),
-        ['🌸', '🌺', '🌻', '🌷'][i % 4],
-        { fontSize: '14px' }
-      ).setOrigin(0.5).setDepth(3).setAlpha(0.8)
-    }
-    
-    // Reduce birds by half - 4 instead of 8, spread over larger area
-    const birdCount = Math.min(4, Math.floor(this.birdPopulation / 16))
-    const birdPositions = [
-      { x: -180, y: 80 }, { x: -60, y: 100 }, 
-      { x: 60, y: 90 }, { x: 180, y: 110 }
+    // Flowering plants strategically placed near trees for nectar-feeding birds
+    const flowerPatches = [
+      { x: -160, y: -20 }, { x: -40, y: -60 }, { x: 120, y: -30 }, { x: 40, y: 120 }
     ]
     
-    for (let i = 0; i < birdCount && i < birdPositions.length; i++) {
-      const pos = birdPositions[i]
-      const bird = this.add.text(
-        centerX + 300 + pos.x, centerY + pos.y,
-        ['🐦', '🕊️', '🐤'][i % 3], 
-        { fontSize: '16px' }
-      ).setOrigin(0.5).setDepth(5)
+    flowerPatches.forEach(patch => {
+      const flower = this.add.image(
+        centerX + 300 + patch.x, centerY + patch.y, "food-flowers"
+      ).setScale(0.07)
+       .setOrigin(0.5)
+       .setDepth(3)
+       .setAlpha(0.9)
+    })
+    
+    // Birds positioned according to their preferred habitats
+    const birdCount = Math.min(4, Math.floor(this.birdPopulation / 16))
+    const birdHabitats = [
+      { x: -140, y: -100, type: 'penguin-icon' }, // Near water edge (penguins)
+      { x: -60, y: -40, type: 'kiwi-icon' },      // Forest floor (kiwi)  
+      { x: 80, y: -80, type: 'kakapo-icon' },     // Tree canopy (kakapo)
+      { x: 160, y: 60, type: 'kiwi-icon' }        // Open woodland (kiwi)
+    ]
+    
+    for (let i = 0; i < birdCount && i < birdHabitats.length; i++) {
+      const habitat = birdHabitats[i]
+      const bird = this.add.image(
+        centerX + 300 + habitat.x, centerY + habitat.y,
+        habitat.type
+      ).setScale(0.05)
+       .setOrigin(0.5)
+       .setDepth(5)
       
       // Add flying animation with random delays
       const birdTween = this.tweens.add({
@@ -331,10 +362,10 @@ export class EcoGameScene extends Phaser.Scene {
       this.birdTweens.push(birdTween)
     }
     
-    // Island labels with better positioning for larger islands
-    this.add.text(centerX - 300, centerY + 220, 'WASTELAND', {
+    // Island labels with updated names
+    this.add.text(centerX - 300, centerY + 220, 'GRASSLAND', {
       fontSize: '18px',
-      color: '#ff0000',
+      color: '#32CD32',
       fontStyle: 'bold',
       stroke: '#000000',
       strokeThickness: 3
@@ -353,7 +384,7 @@ export class EcoGameScene extends Phaser.Scene {
     const centerX = this.scale.width / 2
     const centerY = this.scale.height / 2
     
-    // Create kakapo on predator island (starts in danger) - updated position for larger island
+    // Create kakapo on grassland island (starts in a safer but not ideal environment)
     this.kakapo = this.add.sprite(centerX - 300, centerY, '')
       .setDepth(10)
       .setInteractive({ 
@@ -374,17 +405,18 @@ export class EcoGameScene extends Phaser.Scene {
     
     this.kakapo.setTexture('kakapo-sprite')
     
-    // Add kakapo emoji on top with better size
-    const kakapoEmoji = this.add.text(centerX - 300, centerY, '🦜', {
-      fontSize: '28px'
-    }).setOrigin(0.5).setDepth(11)
+    // Add kakapo icon on top instead of emoji
+    const kakapoIcon = this.add.image(centerX - 300, centerY, 'kakapo-icon')
+      .setScale(0.08)
+      .setOrigin(0.5)
+      .setDepth(11)
     
     // Add glow effect for when dragging
     const glowEffect = this.add.circle(centerX - 300, centerY, 25, 0xffff00, 0)
       .setDepth(9)
     
     // Store references
-    this.kakapo.setData('emoji', kakapoEmoji)
+    this.kakapo.setData('icon', kakapoIcon)
     this.kakapo.setData('glow', glowEffect)
   }
 
@@ -551,11 +583,11 @@ export class EcoGameScene extends Phaser.Scene {
       gameObject.x = dragX
       gameObject.y = dragY
       
-      // Update emoji position
-      const emoji = gameObject.getData('emoji')
-      if (emoji) {
-        emoji.x = dragX
-        emoji.y = dragY
+      // Update icon position
+      const icon = gameObject.getData('icon')
+      if (icon) {
+        icon.x = dragX
+        icon.y = dragY
       }
       
       // Update glow position
