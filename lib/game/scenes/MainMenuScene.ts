@@ -7,61 +7,61 @@ export class MainMenuScene extends Phaser.Scene {
   private mapButton!: Phaser.GameObjects.Container
   private titleText!: Phaser.GameObjects.Text
 
-  // Safe haptic feedback function
-  private safeVibrate(duration: number = 50) {
-    if ('vibrate' in navigator && typeof navigator.vibrate === 'function') {
-      try {
-        navigator.vibrate(duration)
-      } catch (error) {
-        console.log('Vibration not supported:', error)
-      }
-    }
-  }
-
   constructor() {
     super({ key: "MainMenuScene" })
   }
 
   preload() {
-    // Background images
+    // 背景图片
     this.load.image("main-bg", "/pixelated-south-island.png")
     
-    // UI elements
+    // UI元素
     this.load.image("pixel-button", "/pixel-button.png")
+    this.load.image("cloud", "/pixel-cloud.png")
+    this.load.image("wave", "/pixel-wave.png")
   }
 
   create() {
     this.gameManager = this.registry.get("gameManager")
     console.log("MainMenuScene gameManager:", this.gameManager)
 
-    // Create background
+    // 创建背景
     this.createBackground()
     
-    // Create title
+    // 创建标题
     this.createTitle()
     
-    // Create buttons
+    // 创建按钮
     this.createButtons()
+    
+    // 创建装饰性动画
+    this.createAnimations()
+    
+    // 创建入场动画
+    this.createIntroAnimation()
   }
 
   private createBackground() {
-    // Add background image
+    // 添加背景图片
     this.backgroundImage = this.add.image(0, 0, "main-bg")
     this.backgroundImage.setOrigin(0, 0)
     
-    // Adjust background size to fit screen
+    // 调整背景大小以适应屏幕
     const scaleX = this.cameras.main.width / this.backgroundImage.width
     const scaleY = this.cameras.main.height / this.backgroundImage.height
     const scale = Math.max(scaleX, scaleY)
     this.backgroundImage.setScale(scale)
     
-    // Center background
+    // 居中背景
     this.backgroundImage.setPosition(
       (this.cameras.main.width - this.backgroundImage.displayWidth) / 2,
       (this.cameras.main.height - this.backgroundImage.displayHeight) / 2
     )
 
-    // Add color filter for atmosphere
+    // 添加像素化效果
+    this.backgroundImage.setTexture("main-bg")
+    
+    // 添加颜色滤镜营造氛围
     this.add.rectangle(
       this.cameras.main.centerX,
       this.cameras.main.centerY,
@@ -73,14 +73,13 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   private createTitle() {
-    // Main title - mobile adaptation
-    const titleSize = this.cameras.main.width < 768 ? "36px" : "48px"
+    // 主标题
     this.titleText = this.add.text(
       this.cameras.main.centerX,
-      this.cameras.main.height * 0.15,
-      "🇳 New Zealand Wildlife Adventure",
+      this.cameras.main.height * 0.2,
+      "🇳🇿 新西兰动物探险",
       {
-        fontSize: titleSize,
+        fontSize: "48px",
         color: "#4CAF50",
         fontFamily: "'Courier New', monospace",
         fontStyle: "bold",
@@ -90,14 +89,13 @@ export class MainMenuScene extends Phaser.Scene {
     this.titleText.setOrigin(0.5)
     this.titleText.setShadow(4, 4, "#1a1a2e", 8, true, true)
 
-    // Subtitle - mobile adaptation
-    const subtitleSize = this.cameras.main.width < 768 ? "18px" : "24px"
+    // 副标题
     const subtitle = this.add.text(
       this.cameras.main.centerX,
-      this.cameras.main.height * 0.22,
-      "Explore, Collect, Learn",
+      this.cameras.main.height * 0.28,
+      "探索、收集、学习",
       {
-        fontSize: subtitleSize,
+        fontSize: "24px",
         color: "#ffffff",
         fontFamily: "'Courier New', monospace",
         align: "center",
@@ -106,7 +104,7 @@ export class MainMenuScene extends Phaser.Scene {
     subtitle.setOrigin(0.5)
     subtitle.setShadow(2, 2, "#000000", 4, true, true)
 
-    // Title blinking effect
+    // 标题闪烁效果
     this.tweens.add({
       targets: this.titleText,
       alpha: 0.7,
@@ -121,32 +119,25 @@ export class MainMenuScene extends Phaser.Scene {
     const centerX = this.cameras.main.centerX
     const centerY = this.cameras.main.centerY
 
-    // Mobile button layout adaptation
-    const isMobile = this.cameras.main.width < 768
-    const buttonSpacing = isMobile ? 0 : 300
-    const buttonY = isMobile ? centerY + 50 : centerY + 100
-
-    // Backpack button
+    // 背包按钮
     this.backpackButton = this.createPixelButton(
-      centerX - (buttonSpacing / 2),
-      buttonY,
-      "Animal Collection",
+      centerX - 150,
+      centerY + 100,
+      "🎒 动物收藏",
       0x4CAF50,
-      () => this.openBackpack(),
-      isMobile
+      () => this.openBackpack()
     )
 
-    // Map button
+    // 地图按钮
     this.mapButton = this.createPixelButton(
-      centerX + (buttonSpacing / 2),
-      buttonY + (isMobile ? 100 : 0),
-      "Explore Map",
+      centerX + 150,
+      centerY + 100,
+      "🗺️ 探索地图",
       0x2196F3,
-      () => this.openMap(),
-      isMobile
+      () => this.openMap()
     )
 
-    // Add statistics to buttons
+    // 为按钮添加统计信息
     this.updateButtonStats()
   }
 
@@ -155,31 +146,25 @@ export class MainMenuScene extends Phaser.Scene {
     y: number,
     text: string,
     color: number,
-    callback: () => void,
-    isMobile: boolean = false
+    callback: () => void
   ): Phaser.GameObjects.Container {
     const button = this.add.container(x, y)
     
-    // Mobile button size adaptation
-    const buttonWidth = isMobile ? 280 : 260
-    const buttonHeight = isMobile ? 90 : 80
-    const fontSize = isMobile ? "20px" : "18px"
+    // 按钮背景 - 多层像素效果
+    const bgLarge = this.add.rectangle(0, 0, 260, 80, color, 0.9)
+    const bgMedium = this.add.rectangle(0, 0, 250, 70, color, 1)
+    const bgSmall = this.add.rectangle(0, 0, 240, 60, 0xffffff, 0.1)
     
-    // Button background - multi-layer pixel effect
-    const bgLarge = this.add.rectangle(0, 0, buttonWidth, buttonHeight, color, 0.9)
-    const bgMedium = this.add.rectangle(0, 0, buttonWidth - 10, buttonHeight - 10, color, 1)
-    const bgSmall = this.add.rectangle(0, 0, buttonWidth - 20, buttonHeight - 20, 0xffffff, 0.1)
-    
-    // Border effect
-    const border1 = this.add.rectangle(0, 0, buttonWidth, buttonHeight, 0x000000, 0)
+    // 边框效果
+    const border1 = this.add.rectangle(0, 0, 260, 80, 0x000000, 0)
     border1.setStrokeStyle(4, 0x000000)
     
-    const border2 = this.add.rectangle(0, 0, buttonWidth - 10, buttonHeight - 10, 0x000000, 0)
+    const border2 = this.add.rectangle(0, 0, 250, 70, 0x000000, 0)
     border2.setStrokeStyle(2, 0xffffff, 0.3)
 
-    // Button text
+    // 按钮文字
     const buttonText = this.add.text(0, 0, text, {
-      fontSize: fontSize,
+      fontSize: "18px",
       color: "#000000",
       fontFamily: "'Courier New', monospace",
       fontStyle: "bold",
@@ -187,27 +172,24 @@ export class MainMenuScene extends Phaser.Scene {
     buttonText.setOrigin(0.5)
     buttonText.setShadow(1, 1, "#ffffff", 2, true, true)
 
-    // Assemble button
+    // 组装按钮
     button.add([bgLarge, bgMedium, bgSmall, border1, border2, buttonText])
     
-    // Set interaction - mobile increase hit area
-    const hitAreaWidth = isMobile ? buttonWidth + 20 : buttonWidth
-    const hitAreaHeight = isMobile ? buttonHeight + 20 : buttonHeight
-    button.setSize(hitAreaWidth, hitAreaHeight)
+    // 设置交互
+    button.setSize(260, 80)
     button.setInteractive({ useHandCursor: true })
 
-    // Hover effect - mobile reduce animation amplitude
-    const hoverScale = isMobile ? 1.05 : 1.1
+    // 悬停效果
     button.on("pointerover", () => {
       this.tweens.add({
         targets: button,
-        scaleX: hoverScale,
-        scaleY: hoverScale,
+        scaleX: 1.1,
+        scaleY: 1.1,
         duration: 200,
         ease: "Back.easeOut"
       })
       
-      // Button glow effect
+      // 按钮发光效果
       bgMedium.setFillStyle(0xffffff, 0.8)
     })
 
@@ -223,7 +205,7 @@ export class MainMenuScene extends Phaser.Scene {
       bgMedium.setFillStyle(color, 1)
     })
 
-    // Click effect - mobile optimization
+    // 点击效果
     button.on("pointerdown", () => {
       this.tweens.add({
         targets: button,
@@ -231,54 +213,140 @@ export class MainMenuScene extends Phaser.Scene {
         scaleY: 0.95,
         duration: 100,
         yoyo: true,
-        ease: "Back.easeOut"
+        ease: "Power2"
       })
       
-      // Mobile add haptic feedback
-      this.safeVibrate()
-      
-      callback()
+      // 延迟执行回调以显示动画
+      this.time.delayedCall(200, callback)
     })
-
-    // Save text element reference
-    button.setData("textElement", buttonText)
 
     return button
   }
 
-  private updateButtonStats() {
-    if (!this.gameManager) return
-
-    const gameState = this.gameManager.getGameState()
-    const capturedAnimals = gameState.getCapturedAnimals()
-    const totalAnimals = gameState.getAllAnimals().length
-
-    // Update backpack button text
-    const backpackText = this.backpackButton.getData("textElement") as Phaser.GameObjects.Text
-    if (backpackText) {
-      backpackText.setText(`Animal Collection (${capturedAnimals.length}/${totalAnimals})`)
+  private createAnimations() {
+    // 创建飘动的云朵
+    for (let i = 0; i < 3; i++) {
+      const cloud = this.add.image(
+        Phaser.Math.Between(-100, this.cameras.main.width + 100),
+        Phaser.Math.Between(50, 200),
+        "cloud"
+      )
+      cloud.setScale(0.05 + Math.random() * 0.05) // 调整为 0.05-0.1 的小范围
+      cloud.setAlpha(0.3 + Math.random() * 0.4)
+      
+      // 云朵飘动动画
+      this.tweens.add({
+        targets: cloud,
+        x: cloud.x + Phaser.Math.Between(200, 400),
+        duration: Phaser.Math.Between(15000, 25000),
+        repeat: -1,
+        ease: "Linear"
+      })
     }
 
-    // Update map button text
-    const mapText = this.mapButton.getData("textElement") as Phaser.GameObjects.Text
-    if (mapText) {
-      mapText.setText(" Explore Map")
+    // 创建底部波浪动画
+    for (let i = 0; i < 4; i++) {
+      const wave = this.add.image(
+        i * 200 - 100,
+        this.cameras.main.height - 50,
+        "wave"
+      )
+      wave.setScale(1.2)
+      wave.setAlpha(0.4)
+      
+      // 波浪上下动画
+      this.tweens.add({
+        targets: wave,
+        y: wave.y + Phaser.Math.Between(-10, 10),
+        duration: Phaser.Math.Between(2000, 3000),
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut"
+      })
+    }
+  }
+
+  private createIntroAnimation() {
+    // 所有元素初始设为不可见
+    this.titleText.setAlpha(0)
+    this.backpackButton.setAlpha(0)
+    this.mapButton.setAlpha(0)
+
+    // 依次淡入动画
+    this.tweens.add({
+      targets: this.titleText,
+      alpha: 1,
+      y: this.titleText.y + 50,
+      duration: 1000,
+      ease: "Back.easeOut"
+    })
+
+    this.tweens.add({
+      targets: this.backpackButton,
+      alpha: 1,
+      x: this.backpackButton.x + 30,
+      duration: 800,
+      delay: 500,
+      ease: "Back.easeOut"
+    })
+
+    this.tweens.add({
+      targets: this.mapButton,
+      alpha: 1,
+      x: this.mapButton.x - 30,
+      duration: 800,
+      delay: 700,
+      ease: "Back.easeOut"
+    })
+  }
+
+  private updateButtonStats() {
+    // 添加安全检查
+    if (!this.gameManager || !this.gameManager.getGameState) {
+      console.warn("GameManager not available in MainMenuScene")
+      return
+    }
+
+    try {
+      // 获取统计信息
+      const gameState = this.gameManager.getGameState()
+      const capturedAnimals = gameState.getCapturedAnimals()
+      const totalAnimals = gameState.getAllAnimals().length
+
+      // 在背包按钮下方添加统计信息
+      const statsText = this.add.text(
+        this.backpackButton.x,
+        this.backpackButton.y + 60,
+        `已收集: ${capturedAnimals.length}/${totalAnimals}`,
+        {
+          fontSize: "14px",
+          color: "#ffffff",
+          fontFamily: "'Courier New', monospace",
+          align: "center"
+        }
+      )
+      statsText.setOrigin(0.5)
+      statsText.setShadow(1, 1, "#000000", 2, true, true)
+    } catch (error) {
+      console.error("Error updating button stats:", error)
     }
   }
 
   private openBackpack() {
-    console.log("Opening backpack...")
-    if (this.gameManager) {
-      this.gameManager.getGameState().setCurrentMode("backpack")
+    // 添加转场效果
+    this.cameras.main.fadeOut(500, 0, 0, 0)
+    
+    this.cameras.main.once("camerafadeoutcomplete", () => {
       this.scene.start("BackpackScene")
-    }
+    })
   }
 
   private openMap() {
-    console.log("Opening map...")
-    if (this.gameManager) {
-      this.gameManager.getGameState().setCurrentMode("map")
+    // 添加转场效果
+    this.cameras.main.fadeOut(500, 0, 0, 0)
+    
+    this.cameras.main.once("camerafadeoutcomplete", () => {
       this.scene.start("MapScene")
-    }
+    })
   }
 }

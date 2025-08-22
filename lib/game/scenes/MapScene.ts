@@ -181,7 +181,7 @@ export class MapScene extends Phaser.Scene {
     for (let i = 0; i < 5; i++) {
       const cloud = this.add
         .image(Phaser.Math.Between(0, this.cameras.main.width), Phaser.Math.Between(50, 200), "cloud")
-        .setScale(0.1)
+        .setScale(0.05)
         .setAlpha(0.7)
         .setDepth(5)
 
@@ -572,7 +572,7 @@ export class MapScene extends Phaser.Scene {
         feedbackText.destroy()
         progressText.destroy()
         overlay.destroy()
-        this.scene.start("ARScene")
+        this.scene.start("ARScene", { gameManager: this.gameManager })
       })
     }
   }

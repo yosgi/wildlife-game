@@ -30,6 +30,20 @@ export class BackpackScene extends Phaser.Scene {
     super({ key: "BackpackScene" })
   }
 
+  shutdown() {
+    // Hide DOM container when scene shuts down
+    if (this.domContainer) {
+      this.domContainer.style.display = 'none'
+    }
+  }
+
+  wake() {
+    // Show DOM container when scene wakes up
+    if (this.domContainer) {
+      this.domContainer.style.display = 'block'
+    }
+  }
+
   create() {
     this.gameManager = (this.game as any).gameManager
     this.aiEducationService = new AIEducationService()
@@ -741,7 +755,7 @@ export class BackpackScene extends Phaser.Scene {
             -webkit-tap-highlight-color: transparent;
           ">🍎 Feed</button>
           
-          <button id="learn-animal" class="pixel-btn" style="
+          <button id="mini-game" class="pixel-btn" style="
             background: #2196F3 !important;
             border: 4px solid #1565C0 !important;
             color: #000000 !important;
@@ -756,7 +770,7 @@ export class BackpackScene extends Phaser.Scene {
             min-width: 44px;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
-          ">📚 Learn</button>
+          ">🎮 Mini Game</button>
           
           <button id="quiz-animal" class="pixel-btn" style="
             background: #FF9800 !important;
@@ -794,10 +808,14 @@ export class BackpackScene extends Phaser.Scene {
       this.feedAnimal(animal)
     })
 
-    this.modalElement.querySelector('#learn-animal')?.addEventListener('click', () => {
+    this.modalElement.querySelector('#mini-game')?.addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      
+      console.log('Mini-game button clicked!')
       // Mobile haptic feedback
       this.safeVibrate(50)
-      this.showEducationalContent(animal)
+      this.startMiniGame(animal)
     })
 
     this.modalElement.querySelector('#quiz-animal')?.addEventListener('click', () => {
@@ -886,6 +904,39 @@ export class BackpackScene extends Phaser.Scene {
   private async showEducationalContent(animal: Animal) {
     this.closeModal()
     this.showFeedback(`📚 Preparing educational content for ${animal.name}...`)
+  }
+
+  private startMiniGame(animal: Animal) {
+    console.log('startMiniGame called with animal:', animal?.name)
+    console.log('Current scene key:', this.scene.key)
+    
+    this.closeModal()
+    
+    // Use setTimeout to ensure modal cleanup is complete
+    setTimeout(() => {
+      try {
+        // Navigate to the EcoGame scene with animal data
+        console.log('Starting EcoGameScene...')
+        console.log('Available scenes:', this.scene.manager.scenes.map(s => s.scene.key))
+        
+        // Pause this scene and start the new one
+        this.scene.pause("BackpackScene")
+        this.scene.launch("EcoGameScene", { 
+          animal: animal,
+          gameManager: this.gameManager 
+        })
+        
+        // Hide this scene's DOM
+        setTimeout(() => {
+          if (this.domContainer) {
+            this.domContainer.style.display = 'none'
+          }
+        }, 100)
+        console.log('EcoGameScene start command sent')
+      } catch (error) {
+        console.error('Error starting EcoGameScene:', error)
+      }
+    }, 100)
   }
 
   private async startQuiz(animal: Animal) {

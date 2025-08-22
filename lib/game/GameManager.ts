@@ -3,6 +3,7 @@ import { MainMenuScene } from "./scenes/MainMenuScene"
 import { MapScene } from "./scenes/MapScene"
 import { ARScene } from "./scenes/ARScene"
 import { BackpackScene } from "./scenes/BackpackScene"
+import { EcoGameScene } from "./scenes/EcoGameScene"
 
 export class GameManager {
   private container: HTMLElement
@@ -38,7 +39,7 @@ export class GameManager {
       height: window.innerHeight,
       parent: this.container,
       backgroundColor: "#87CEEB",
-      scene: [MainMenuScene, MapScene, ARScene, BackpackScene],
+      scene: [MainMenuScene, MapScene, ARScene, BackpackScene, EcoGameScene],
       physics: {
         default: "arcade",
         arcade: {
@@ -49,73 +50,20 @@ export class GameManager {
       scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: window.innerWidth,
-        height: window.innerHeight,
       },
-      // Mobile optimization configuration
-      input: {
-        touch: {
-          target: this.container,
-          capture: true
-        }
-      },
-      render: {
-        pixelArt: true,
-        antialias: false,
-        roundPixels: true,
-        powerPreference: "high-performance"
-      },
-      // Mobile performance optimization
-      fps: {
-        target: 60,
-        forceSetTimeOut: true
-      },
-      // Prevent mobile scaling
-      dom: {
-        createContainer: true
-      }
     }
 
     this.phaserGame = new Phaser.Game(config)
     this.phaserGame.gameManager = this
     
-    // Register gameManager in registry so all scenes can access it
+    // 在registry中注册gameManager，这样所有场景都能访问
     this.phaserGame.registry.set("gameManager", this)
     console.log("GameManager registered in Phaser registry")
-
-    // Mobile event handling
-    this.setupMobileEvents()
   }
 
-  private setupMobileEvents() {
-    // Prevent mobile double-tap zoom
-    let lastTouchEnd = 0
-    document.addEventListener('touchend', (event) => {
-      const now = (new Date()).getTime()
-      if (now - lastTouchEnd <= 300) {
-        event.preventDefault()
-      }
-      lastTouchEnd = now
-    }, false)
-
-    // Prevent mobile scroll
-    document.addEventListener('touchmove', (event) => {
-      if (event.target === this.container) {
-        event.preventDefault()
-      }
-    }, { passive: false })
-
-    // Handle screen rotation
-    window.addEventListener('orientationchange', () => {
-      setTimeout(() => {
-        if (this.phaserGame) {
-          this.phaserGame.scale.resize(window.innerWidth, window.innerHeight)
-        }
-      }, 100)
-    })
-
-    // Handle window size change
-    window.addEventListener('resize', () => {
+  private setupEventListeners() {
+    // Handle window resize
+    window.addEventListener("resize", () => {
       if (this.phaserGame) {
         this.phaserGame.scale.resize(window.innerWidth, window.innerHeight)
       }
