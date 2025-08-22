@@ -190,158 +190,96 @@ export class EcoGameScene extends Phaser.Scene {
     const centerX = this.scale.width / 2
     const centerY = this.scale.height / 2
     
-    // Grassland Island (left) - changed from wasteland to grassland
-    const grasslandIsland = this.add.ellipse(
-      centerX - 300, centerY,
-      560, 400,
-      0x9ACD32  // Changed to grass green color
+    // Grassland Island - boundary around the actual grass elements and animals
+    const grasslandIslandPoints = [
+      -270, -170,  // Top left (around leftmost grass)
+      -90, -180,   // Top center left  
+      70, -150,    // Top center (around topmost grass)
+      200, -130,   // Top right
+      240, -70,    // Right top (around rightmost grass)
+      230, 10,     // Right center
+      210, 90,     // Right bottom
+      120, 150,    // Bottom right (around bottommost grass)
+      -40, 160,    // Bottom center
+      -160, 130,   // Bottom left
+      -270, 90,    // Left bottom (around leftmost bottom grass)
+      -280, 10,    // Left center
+      -270, -80,   // Left top
+      -280, -130   // Left top corner
+    ]
+    
+    const grasslandIsland = this.add.polygon(
+      centerX - 80, centerY+210,
+      grasslandIslandPoints,
+      0x9ACD32  // Grass green color
     ).setDepth(1)
     
-    // Add scattered grass clumps using food-flowers with appropriate positioning for grassland animals
-    const grassPositions = [
-      { x: -180, y: -120 }, { x: -100, y: -80 }, { x: -20, y: -140 },
-      { x: 60, y: -100 }, { x: 140, y: -60 }, { x: -160, y: 20 },
-      { x: -80, y: 60 }, { x: 0, y: -20 }, { x: 80, y: 40 },
-      { x: 160, y: 80 }, { x: -120, y: 120 }, { x: 40, y: 140 }
+    // Add outline to grassland island for better definition
+    const grasslandOutline = this.add.polygon(
+        centerX - 80, centerY+210,
+      grasslandIslandPoints
+    ).setStrokeStyle(4, 0x7BB526, 0.8).setDepth(1)
+    
+    // Pure grassland without visible grass clumps
+    
+    // No trees in grassland - keeping it as pure grassland habitat
+    
+    // Place single grazing animal within the grassland boundary
+    const singleKiwi = this.add.image(
+      centerX - 300 + 60, centerY + 80, // Position from the original grazingPositions
+      'kiwi-icon'
+    ).setScale(0.06)
+     .setOrigin(0.5)
+     .setDepth(4)
+     .setAlpha(0.9)
+    
+    // Safe Island (right) - forest sanctuary moved further right and smaller
+    const forestIslandPoints = [
+      -240, -160,  // Top left
+      -120, -180,  // Top center left
+      10, -160,    // Top center
+      140, -150,   // Top center right
+      240, -130,   // Top right
+      260, -70,    // Right top
+      240, 20,     // Right center
+      220, 120,    // Right center bottom
+      180, 160,    // Right bottom
+      100, 170,    // Bottom right
+      -20, 160,    // Bottom center
+      -140, 150,   // Bottom left
+      -240, 90,    // Left bottom
+      -260, -10,   // Left center
+      -240, -80,   // Left top
+      -250, -120   // Left top corner
     ]
     
-    grassPositions.forEach((pos, i) => {
-      // Use food-flowers as grass patches with lighter green tint
-      const grass = this.add.image(
-        centerX - 300 + pos.x, centerY + pos.y, "food-flowers"
-      ).setScale(0.06)
-       .setOrigin(0.5)
-       .setDepth(2)
-       .setAlpha(0.7)
-       .setTint(0x7CFC00) // Bright grass green
-    })
-    
-    // Add some pixel trees sparsely for a mixed grassland-woodland habitat
-    const sparseTreePositions = [
-      { x: -140, y: -40 }, { x: 80, y: -70 }, { x: -60, y: 80 }, 
-      { x: 120, y: 50 }, { x: -100, y: -120 }, { x: 160, y: -20 }
-    ]
-    
-    sparseTreePositions.forEach(pos => {
-      const tree = this.add.image(
-        centerX - 300 + pos.x, centerY + pos.y, "pixel-tree"
-      ).setScale(0.08)
-       .setOrigin(0.5)
-       .setDepth(3)
-       .setAlpha(0.8)
-       .setTint(0x228B22) // Forest green for scattered trees
-    })
-    
-    // Place grazing animals (using kiwi and tuatara as grassland animals)
-    const grazingPositions = [
-      { x: -120, y: -20 }, { x: 20, y: 30 }, { x: 100, y: -50 },
-      { x: -40, y: 100 }, { x: 80, y: -100 }
-    ]
-    
-    for (let i = 0; i < this.predators && i < grazingPositions.length; i++) {
-      const pos = grazingPositions[i]
-      const animalTypes = ['kiwi-icon', 'tuatara-icon'] // Ground-dwelling grassland animals
-      const animal = this.add.image(
-        centerX - 300 + pos.x, centerY + pos.y,
-        animalTypes[i % 2]
-      ).setScale(0.06)
-       .setOrigin(0.5)
-       .setDepth(4)
-       .setAlpha(0.9) // Normal animals, not threatening
-    }
-    
-    // Safe Island (right) - forest sanctuary with strategic forest placement
-    const safeIsland = this.add.rectangle(
-      centerX + 300, centerY,
-      640, 480,
+    const safeIsland = this.add.polygon(
+      centerX + 750, centerY + 270,  // Moved right +300px, down +270px
+      forestIslandPoints,
       0x228B22
     ).setDepth(1)
     
-    // Strategic forest background placement - create natural clusters for birds
-    const forestClusters = [
-      { x: -120, y: -80, scale: 0.4 }, // North cluster for canopy birds
-      { x: 80, y: -60, scale: 0.35 },  // Northeast cluster  
-      { x: -60, y: 40, scale: 0.45 },  // South cluster for ground foragers
-      { x: 100, y: 80, scale: 0.4 }    // Southeast cluster
-    ]
+    // Add outline to forest island for better definition
+    const forestOutline = this.add.polygon(
+      centerX + 750, centerY + 270,  // Moved right +300px, down +270px
+      forestIslandPoints
+    ).setStrokeStyle(4, 0x1E5F1E, 0.8).setDepth(1)
     
-    forestClusters.forEach(cluster => {
-      const forestBg = this.add.image(
-        centerX + 300 + cluster.x, centerY + cluster.y, "forest"
-      ).setScale(cluster.scale)
-       .setDepth(2)
-       .setAlpha(0.6)
-    })
+    // Open forest sanctuary - no trees, just clear habitat for birds
     
-    // Individual pixel trees strategically placed for different bird types
-    const strategicTreePositions = [
-      { x: -200, y: -100, type: 'canopy' },   // Tall trees for aerial birds
-      { x: -140, y: -40, type: 'mid' },      // Mid-level for perching
-      { x: -80, y: -120, type: 'canopy' },   // Forest edge
-      { x: 0, y: -80, type: 'mid' },         // Central perching
-      { x: 80, y: -110, type: 'canopy' },    // North edge
-      { x: 140, y: -50, type: 'mid' },       // Open woodland
-      { x: 200, y: -90, type: 'canopy' },    // East canopy
-      { x: -100, y: 60, type: 'under' },     // Understory for ground birds
-      { x: 60, y: 100, type: 'under' }       // Southern understory
-    ]
+    // No flowering plants - clean forest environment
     
-    for (let i = 0; i < this.trees && i < strategicTreePositions.length; i++) {
-      const pos = strategicTreePositions[i]
-      const x = centerX + 300 + pos.x
-      const y = centerY + pos.y
-      
-      if (pos.type === 'canopy') {
-        // Tall canopy trees using pixel-tree - reduced size
-        const tree = this.add.image(x, y, "pixel-tree")
-          .setScale(Phaser.Math.Between(0.10, 0.14))  // Reduced from 0.15-0.20
-          .setOrigin(0.5)
-          .setDepth(3)
-          .setTint(0x228B22)
-      } else if (pos.type === 'mid') {
-        // Medium trees using smaller forest pieces
-        const tree = this.add.image(x, y, "forest")
-          .setScale(0.10)  // Reduced from 0.12
-          .setDepth(3)
-          .setAlpha(0.9)
-      } else {
-        // Understory using food-flowers as bushes
-        const bush = this.add.image(x, y, "food-flowers")
-          .setScale(0.06)  // Reduced from 0.08
-          .setOrigin(0.5)
-          .setDepth(3)
-          .setTint(0x32CD32)
-          .setAlpha(0.8)
-      }
-    }
-    
-    // Flowering plants strategically placed near trees for nectar-feeding birds
-    const flowerPatches = [
-      { x: -160, y: -20 }, { x: -40, y: -60 }, { x: 120, y: -30 }, { x: 40, y: 120 }
-    ]
-    
-    flowerPatches.forEach(patch => {
-      const flower = this.add.image(
-        centerX + 300 + patch.x, centerY + patch.y, "food-flowers"
-      ).setScale(0.07)
-       .setOrigin(0.5)
-       .setDepth(3)
-       .setAlpha(0.9)
-    })
-    
-    // Birds positioned according to their preferred habitats
-    const birdCount = Math.min(4, Math.floor(this.birdPopulation / 16))
+    // Birds positioned within the adjusted forest polygon boundary
+    const birdCount = Math.min(2, Math.floor(this.birdPopulation / 16))
     const birdHabitats = [
-      { x: -140, y: -100, type: 'penguin-icon' }, // Near water edge (penguins)
-      { x: -60, y: -40, type: 'kiwi-icon' },      // Forest floor (kiwi)  
-      { x: 80, y: -80, type: 'kakapo-icon' },     // Tree canopy (kakapo)
-      { x: 160, y: 60, type: 'kiwi-icon' }        // Open woodland (kiwi)
+      { x: -80, y: -150, type: 'kiwi-icon' },     // North central  
+      { x: 180, y: 120, type: 'kiwi-icon' }       // Southeast area
     ]
     
     for (let i = 0; i < birdCount && i < birdHabitats.length; i++) {
       const habitat = birdHabitats[i]
       const bird = this.add.image(
-        centerX + 300 + habitat.x, centerY + habitat.y,
+        centerX + 750 + habitat.x, centerY + 270 + habitat.y,  // Updated position
         habitat.type
       ).setScale(0.05)
        .setOrigin(0.5)
@@ -371,7 +309,7 @@ export class EcoGameScene extends Phaser.Scene {
       strokeThickness: 3
     }).setOrigin(0.5).setDepth(6)
     
-    this.add.text(centerX + 300, centerY + 260, 'FOREST SANCTUARY', {
+    this.add.text(centerX + 750, centerY + 470, 'FOREST SANCTUARY', {  // Updated position
       fontSize: '18px', 
       color: '#00ff00',
       fontStyle: 'bold',
@@ -624,12 +562,25 @@ export class EcoGameScene extends Phaser.Scene {
   private isKakapoSafe(): boolean {
     const centerX = this.scale.width / 2
     const centerY = this.scale.height / 2
-    const safeZoneX = centerX + 300 // Updated to match new larger forest island position
-    const distance = Phaser.Math.Distance.Between(
-      this.kakapo.x, this.kakapo.y,
-      safeZoneX, centerY
-    )
-    return distance < 320 // Doubled safe zone for the much larger forest island (640/2)
+    
+    // Forest island center (updated position)
+    const forestCenterX = centerX + 750
+    const forestCenterY = centerY + 270
+    
+    // Use approximate bounding box for the irregular forest island
+    // Based on the polygon points, create a safe zone
+    const kakapoX = this.kakapo.x
+    const kakapoY = this.kakapo.y
+    
+    // Define safe zone boundaries based on the updated forest polygon
+    const leftBound = forestCenterX - 260   // -260 from polygon (smaller island)
+    const rightBound = forestCenterX + 260  // +260 from polygon  
+    const topBound = forestCenterY - 180    // -180 from polygon
+    const bottomBound = forestCenterY + 170 // +170 from polygon
+    
+    // Check if kakapo is within the forest island boundaries
+    return kakapoX >= leftBound && kakapoX <= rightBound && 
+           kakapoY >= topBound && kakapoY <= bottomBound
   }
 
   private checkKakapoSafety() {
