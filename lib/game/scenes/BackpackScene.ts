@@ -8,6 +8,7 @@ export class BackpackScene extends Phaser.Scene {
   private filterMode: "all" | "north" | "south" = "all"
   private sortMode: "name" | "intimacy" | "recent" = "name"
   private aiEducationService!: AIEducationService
+  private hasAutoSelectedKakapo = false
 
   // DOM Elements
   private domContainer!: HTMLDivElement
@@ -42,6 +43,9 @@ export class BackpackScene extends Phaser.Scene {
     if (this.domContainer) {
       this.domContainer.style.display = 'block'
     }
+    
+    // Don't auto-select Kakapo when waking up from another scene
+    console.log('BackpackScene woke up, not auto-selecting Kakapo')
   }
 
   create() {
@@ -54,6 +58,39 @@ export class BackpackScene extends Phaser.Scene {
     
     // Add window resize listener
     this.setupResizeHandler()
+    
+    // Auto-open Kakapo modal after everything is loaded
+    this.time.delayedCall(500, () => {
+      this.autoSelectKakapo()
+    })
+  }
+
+  private autoSelectKakapo() {
+    // Only auto-select once per game session
+    if (this.hasAutoSelectedKakapo) {
+      return
+    }
+    
+    const gameState = this.gameManager.getGameState()
+    let kakapo = gameState.getCapturedAnimals().find((animal: Animal) => animal.id === 'kakapo')
+    
+    // If kakapo is not captured yet, capture it first (for demo purposes)
+    if (!kakapo) {
+      console.log('Kakapo not captured yet, capturing it for demo')
+      gameState.captureAnimal('kakapo')
+      kakapo = gameState.getCapturedAnimals().find((animal: Animal) => animal.id === 'kakapo')
+    }
+    
+    if (kakapo) {
+      console.log('Auto-selecting Kakapo on first BackpackScene load')
+      // Refresh the animals display first to show the captured kakapo
+      this.loadAnimals()
+      // Then select the kakapo
+      this.selectAnimal(kakapo)
+      this.hasAutoSelectedKakapo = true
+    } else {
+      console.log('Failed to find or capture Kakapo')
+    }
   }
 
   private setupResizeHandler() {
@@ -487,6 +524,83 @@ export class BackpackScene extends Phaser.Scene {
     })
   }
 
+  private getAnimalImageSrc(animalId: string): string | null {
+    const imageMap: { [key: string]: string } = {
+      'kakapo': '/pixel-art-kakapo-icon.png',
+      'kiwi': '/pixel-art-kiwi-icon.png',
+      'penguin': '/pixel-art-penguin-icon.png',
+      'tuatara': '/pixel-art-tuatara-icon.png'
+    }
+    
+    return imageMap[animalId] || null
+  }
+
+  private getAnimalDisplayContent(animal: Animal, isMobile: boolean): string {
+    const imageSrc = this.getAnimalImageSrc(animal.id)
+    const size = isMobile ? '48px' : '56px'
+    
+    if (imageSrc) {
+      return `<img src="${imageSrc}" style="
+        width: ${size}; 
+        height: ${size}; 
+        margin-bottom: 15px;
+        image-rendering: pixelated;
+        filter: contrast(1.2) saturate(1.1);
+        object-fit: contain;
+      " alt="${animal.name}" />`
+    } else {
+      // Fallback to emoji for animals without custom images
+      const emojiMap: { [key: string]: string } = {
+        'kiwi': '🥝',
+        'kakapo': '🦜',
+        'penguin': '🐧',
+        'tuatara': '🦎'
+      }
+      const emoji = emojiMap[animal.id] || '🦜'
+      const emojiSize = isMobile ? '40px' : '48px'
+      
+      return `<div style="
+        font-size: ${emojiSize}; 
+        margin-bottom: 15px; 
+        filter: contrast(1.2) saturate(1.1);
+        image-rendering: pixelated;
+      ">${emoji}</div>`
+    }
+  }
+
+  private getAnimalModalImage(animal: Animal, isMobile: boolean): string {
+    const imageSrc = this.getAnimalImageSrc(animal.id)
+    const size = isMobile ? '64px' : '80px'
+    
+    if (imageSrc) {
+      return `<img src="${imageSrc}" style="
+        width: ${size}; 
+        height: ${size}; 
+        margin-bottom: 20px;
+        image-rendering: pixelated;
+        filter: contrast(1.2) saturate(1.1);
+        object-fit: contain;
+      " alt="${animal.name}" />`
+    } else {
+      // Fallback to emoji for animals without custom images
+      const emojiMap: { [key: string]: string } = {
+        'kiwi': '🥝',
+        'kakapo': '🦜',
+        'penguin': '🐧',
+        'tuatara': '🦎'
+      }
+      const emoji = emojiMap[animal.id] || '🦜'
+      const emojiSize = isMobile ? '56px' : '72px'
+      
+      return `<div style="
+        font-size: ${emojiSize}; 
+        margin-bottom: 20px;
+        filter: contrast(1.2) saturate(1.1);
+        image-rendering: pixelated;
+      ">${emoji}</div>`
+    }
+  }
+
   private createAnimalCardHTML(animal: Animal): string {
     const statusColors = {
       'Critically Endangered': '#ff0000',
@@ -523,12 +637,7 @@ export class BackpackScene extends Phaser.Scene {
         "></div>
         
         <div style="text-align: center;">
-          <div style="
-            font-size: ${emojiSize}; 
-            margin-bottom: 15px; 
-            filter: contrast(1.2) saturate(1.1);
-            image-rendering: pixelated;
-          ">🦜</div>
+          ${this.getAnimalDisplayContent(animal, isMobile)}
           <h3 style="
             margin: 0 0 15px 0; 
             color: #4CAF50; 
@@ -699,12 +808,7 @@ export class BackpackScene extends Phaser.Scene {
         ">×</button>
         
         <div style="text-align: center; margin-bottom: ${isMobile ? '24px' : '40px'};">
-          <div style="
-            font-size: ${emojiSize}; 
-            margin-bottom: 20px;
-            filter: contrast(1.2) saturate(1.1);
-            image-rendering: pixelated;
-          ">🦜</div>
+          ${this.getAnimalModalImage(animal, isMobile)}
           <h2 style="
             margin: 0; 
             color: #4CAF50; 

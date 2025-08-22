@@ -344,10 +344,11 @@ export class MapScene extends Phaser.Scene {
 
   private createInfoPanel() {
     const isMobile = this.cameras.main.width < 768
-    const panelX = isMobile ? this.cameras.main.width - 180 : this.cameras.main.width - 220
-    const panelY = isMobile ? 100 : 120
-    const panelWidth = isMobile ? 160 : 200
-    const panelHeight = isMobile ? 140 : 160
+    // Double the size of the panel, adjust position to stay within screen bounds
+    const panelX = isMobile ? this.cameras.main.width - 160 : this.cameras.main.width - 200  // Center the larger panel
+    const panelY = isMobile ? 220 : 240  // Moved down by 120px
+    const panelWidth = isMobile ? 320 : 400  // 2x original size
+    const panelHeight = isMobile ? 280 : 320  // 2x original size
     
     this.infoPanel = this.add
       .container(panelX, panelY)
@@ -355,14 +356,15 @@ export class MapScene extends Phaser.Scene {
       .setAlpha(0)
 
     const panelBg = this.add.rectangle(0, 0, panelWidth, panelHeight, 0x000000, 0.9)
-    const panelBorder = this.add.rectangle(0, 0, panelWidth, panelHeight).setStrokeStyle(3, 0xffffff)
+    const panelBorder = this.add.rectangle(0, 0, panelWidth, panelHeight).setStrokeStyle(6, 0xffffff)  // Thicker border
 
-    const titleSize = isMobile ? "12px" : "14px"
-    const contentSize = isMobile ? "10px" : "11px"
-    const wordWrapWidth = isMobile ? 140 : 180
+    // Increased font sizes proportionally
+    const titleSize = isMobile ? "24px" : "28px"  // 2x original size
+    const contentSize = isMobile ? "20px" : "22px"  // 2x original size
+    const wordWrapWidth = isMobile ? 280 : 360  // 2x original size
     
     const panelTitle = this.add
-      .text(0, isMobile ? -50 : -60, "", {
+      .text(0, isMobile ? -100 : -120, "", {  // 2x original offset
         fontSize: titleSize,
         color: "#4CAF50",
         fontStyle: "bold",
@@ -375,7 +377,7 @@ export class MapScene extends Phaser.Scene {
         color: "#ffffff",
         align: "center",
         wordWrap: { width: wordWrapWidth },
-        lineSpacing: 4,
+        lineSpacing: 8,  // 2x original line spacing
       })
       .setOrigin(0.5)
 
@@ -388,11 +390,11 @@ export class MapScene extends Phaser.Scene {
     const regionData = {
       north: {
         title: "North Island",
-        content: "🌿 Temperate oceanic climate\n🏞️ Forests, grasslands and volcanoes\n🐦 Home to kiwi and tuatara\n🌡️ Warm and humid, suitable for diverse life",
+        content: "Temperate oceanic climate\nForests, grasslands and volcanoes\nHome to kiwi and tuatara\nWarm and humid, suitable for diverse life",
       },
       south: {
-        title: "South Island",
-        content: "🏔️ Magnificent mountains and fjords\n🌊 Rich marine ecosystems\n🐧 Penguin and kakapo habitat\n❄️ Cool climate, diverse terrain",
+        title: "South Island", 
+        content: "Magnificent mountains and fjords\nRich marine ecosystems\nPenguin and kakapo habitat\nCool climate, diverse terrain",
       },
     }
 
