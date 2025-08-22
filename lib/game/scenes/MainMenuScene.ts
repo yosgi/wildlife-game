@@ -217,7 +217,7 @@ export class MainMenuScene extends Phaser.Scene {
         Phaser.Math.Between(50, 200),
         "cloud1"
       )
-      cloud.setScale(Phaser.Math.Between(0.3, 0.6))
+      cloud.setScale(0.05)
       cloud.setAlpha(0.6 + Math.random() * 0.3)
       
       // 云朵飘动动画
@@ -230,7 +230,7 @@ export class MainMenuScene extends Phaser.Scene {
         onRepeat: () => {
           cloud.x = -100
           cloud.y = Phaser.Math.Between(50, 200)
-          cloud.setScale(Phaser.Math.Between(0.3, 0.6))
+          cloud.setScale(0.05)
         }
       })
     }

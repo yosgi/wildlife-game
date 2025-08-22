@@ -145,7 +145,7 @@ export class MapScene extends Phaser.Scene {
     for (let i = 0; i < 5; i++) {
       const cloud = this.add
         .image(Phaser.Math.Between(0, this.cameras.main.width), Phaser.Math.Between(50, 200), "cloud1")
-        .setScale(Phaser.Math.Between(0.4, 0.7))
+        .setScale(0.05)
         .setAlpha(0.8)
         .setDepth(5)
 
@@ -160,7 +160,7 @@ export class MapScene extends Phaser.Scene {
         onRepeat: () => {
           cloud.x = -100
           cloud.y = Phaser.Math.Between(50, 200)
-          cloud.setScale(Phaser.Math.Between(0.4, 0.7))
+          cloud.setScale(0.05)
         },
       })
     }

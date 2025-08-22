@@ -14,6 +14,7 @@ export class EcoGameScene extends Phaser.Scene {
   private lastPointerX = 0
   private lastPointerY = 0
   private isInitialized = false
+  private hasSpawnedAnimals = false  // Flag to spawn animals only once
   
   // Game state
   private birdPopulation = 50
@@ -42,6 +43,20 @@ export class EcoGameScene extends Phaser.Scene {
     // Load individual sprite assets for ecosystems
     this.load.image("pixel-tree", "/pixel-tree.png")
     this.load.image("food-flowers", "/food-flowers.png")
+    this.load.image("food-fish", "/food-fish.png")
+    
+    // Load trees from public/trees directory
+    this.load.image("tree-1", "/trees/row-4-column-4.png")
+    this.load.image("tree-2", "/trees/row-4-column-5.png")
+    this.load.image("tree-3", "/trees/row-4-column-6.png")
+    
+    // Load sheep from NZ wilds directory
+    this.load.image("sheep", "/NZ wilds/sheep.png")
+    
+    // Load landscape elements
+    this.load.image("pixel-mountain", "/pixel-mountain.png")
+    this.load.image("stone", "/stone.png")
+    
     this.load.image("kiwi-icon", "/pixel-art-kiwi-icon.png")
     this.load.image("penguin-icon", "/pixel-art-penguin-icon.png")
     this.load.image("kakapo-icon", "/pixel-art-kakapo-icon.png")
@@ -106,7 +121,7 @@ export class EcoGameScene extends Phaser.Scene {
       console.log('=== EcoGameScene initialization complete ===')
       
       // Add a title to make sure the scene is visible
-      this.add.text(this.scale.width / 2, 50, '🎮 Eco Game - Save the Kakapo!', {
+      this.add.text(this.scale.width / 2, 50, 'Save the Kakapo!', {
         fontSize: '24px',
         color: '#ffffff',
         fontStyle: 'bold',
@@ -165,7 +180,7 @@ export class EcoGameScene extends Phaser.Scene {
         Phaser.Math.Between(0, this.scale.width),
         Phaser.Math.Between(50, 200),
         "cloud1"
-      ).setScale(Phaser.Math.Between(0.3, 0.6))
+      ).setScale(0.05)
        .setDepth(-3)
        .setAlpha(0.8)
       
@@ -177,11 +192,62 @@ export class EcoGameScene extends Phaser.Scene {
         onRepeat: () => {
           cloud.x = -100
           cloud.y = Phaser.Math.Between(50, 200)
-          cloud.setScale(Phaser.Math.Between(0.3, 0.6))
+          cloud.setScale(0.05)
         }
       })
       
       this.waveTweens.push(cloudTween) // Reuse waveTweens array for all background tweens
+    }
+    
+    // Add penguins in the ocean - their natural habitat (NOT on land islands)
+    for (let i = 0; i < 3; i++) {
+      const penguin = this.add.image(
+        Phaser.Math.Between(100, this.scale.width - 100),
+        Phaser.Math.Between(this.scale.height * 0.4, this.scale.height * 0.8),
+        "penguin-icon"
+      ).setScale(0.05)
+       .setOrigin(0.5)
+       .setDepth(2)
+       .setAlpha(0.9)
+      
+      // Add swimming animation for penguins
+      const penguinTween = this.tweens.add({
+        targets: penguin,
+        x: penguin.x + Phaser.Math.Between(-30, 30),
+        y: penguin.y + Phaser.Math.Between(-15, 15),
+        duration: Phaser.Math.Between(2000, 3500),
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+        delay: Phaser.Math.Between(0, 1000)
+      })
+      
+      this.waveTweens.push(penguinTween)
+    }
+    
+    // Add fish food scattered in the ocean
+    for (let i = 0; i < 5; i++) {
+      const fishFood = this.add.image(
+        Phaser.Math.Between(50, this.scale.width - 50),
+        Phaser.Math.Between(this.scale.height * 0.5, this.scale.height * 0.9),
+        "food-fish"
+      ).setScale(0.027)  // Reduced from 0.08 to ~0.027 (3 times smaller)
+       .setOrigin(0.5)
+       .setDepth(1)
+       .setAlpha(0.8)
+      
+      // Add floating animation for fish food
+      const fishTween = this.tweens.add({
+        targets: fishFood,
+        y: fishFood.y - Phaser.Math.Between(8, 15),
+        duration: Phaser.Math.Between(1500, 2500),
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+        delay: Phaser.Math.Between(0, 800)
+      })
+      
+      this.waveTweens.push(fishTween)
     }
   }
 
@@ -224,14 +290,45 @@ export class EcoGameScene extends Phaser.Scene {
     
     // No trees in grassland - keeping it as pure grassland habitat
     
-    // Place single grazing animal within the grassland boundary
+    // Place single grazing animal within the grassland boundary - only kiwi suitable for grassland
     const singleKiwi = this.add.image(
       centerX - 300 + 60, centerY + 80, // Position from the original grazingPositions
-      'kiwi-icon'
+      'kiwi-icon'  // Only kiwi in grassland - penguins belong in ocean
     ).setScale(0.06)
      .setOrigin(0.5)
      .setDepth(4)
      .setAlpha(0.9)
+    
+    // Add sheep to grassland
+    const sheep = this.add.image(
+      centerX - 400, centerY + 140, // Position near kiwi but offset
+      'sheep'
+    ).setScale(1.1)  // Slightly larger than kiwi
+     .setOrigin(0.5)
+     .setDepth(4)
+     .setAlpha(0.9)
+    
+    console.log('✅ Sheep added to grassland at:', sheep.x, sheep.y)
+    
+    // Add mountain to grassland background
+    const mountain = this.add.image(
+      centerX - 500, centerY - 100, // Left side of grassland, in background
+      'pixel-mountain'
+    ).setScale(0.1)  // Medium size for background element
+     .setOrigin(0.5)
+     .setDepth(2)    // Behind animals but above island
+     .setAlpha(0.8)  // Slightly transparent
+    
+    // Add stone to grassland
+    const stone = this.add.image(
+      centerX - 550, centerY + 70, // Right side of grassland
+      'stone'
+    ).setScale(0.9)  // Small decorative element
+     .setOrigin(0.5)
+     .setDepth(3)    // Above background, below animals
+     .setAlpha(0.9)
+    
+    console.log('✅ Mountain and stone added to grassland')
     
     // Safe Island (right) - forest sanctuary moved further right and smaller
     const forestIslandPoints = [
@@ -265,40 +362,85 @@ export class EcoGameScene extends Phaser.Scene {
       forestIslandPoints
     ).setStrokeStyle(4, 0x1E5F1E, 0.8).setDepth(1)
     
-    // Open forest sanctuary - no trees, just clear habitat for birds
+    // Open forest sanctuary - no animals, clean environment
+    
+    // Add three trees in the forest using public/trees assets
+    const treePositions = [
+      { x: -150, y: -120, type: 'tree-1' },   // North west area (更分散)
+      { x: 0, y: -50, type: 'tree-2' },       // North central area  
+      { x: 150, y: 80, type: 'tree-3' }       // South east area (更分散)
+    ]
+    
+    treePositions.forEach(treePos => {
+      // First check if the texture is loaded
+      if (this.textures.exists(treePos.type)) {
+        const tree = this.add.image(
+          centerX + 450 + treePos.x, centerY + 170 + treePos.y,
+          treePos.type
+        ).setScale(1.5)  // 5倍放大: 0.3 × 5 = 1.5 (150%的原始大小)
+         .setOrigin(0.5)
+         .setDepth(10)   // Higher depth to be above everything except UI
+         .setAlpha(1.0)  // Full opacity
+        console.log(`✅ Tree ${treePos.type} added successfully at:`, tree.x, tree.y)
+        console.log(`Tree properties: scale=${tree.scale}, depth=${tree.depth}, alpha=${tree.alpha}, visible=${tree.visible}`)
+        
+        // Force the tree to be visible and active
+        tree.setVisible(true)
+        tree.setActive(true)
+        
+      } else {
+        console.error(`❌ Texture ${treePos.type} not found! Available textures:`, Object.keys(this.textures.list))
+        
+        // Fallback: create a colored rectangle as placeholder
+        const placeholder = this.add.rectangle(
+          centerX + 750 + treePos.x, centerY + 270 + treePos.y,
+          50, 60, 0xff0000  // Red color to be obvious
+        ).setDepth(10)
+        
+        console.log(`🔶 Created placeholder for ${treePos.type} at:`, placeholder.x, placeholder.y)
+      }
+    })
     
     // No flowering plants - clean forest environment
     
-    // Birds positioned within the adjusted forest polygon boundary
-    const birdCount = Math.min(2, Math.floor(this.birdPopulation / 16))
-    const birdHabitats = [
-      { x: -80, y: -150, type: 'kiwi-icon' },     // North central  
-      { x: 180, y: 120, type: 'kiwi-icon' }       // Southeast area
+    // Add two kiwi birds in the forest sanctuary
+    const forestKiwiPositions = [
+      { x: -100, y: 0 },   // Left side of forest
+      { x: 80, y: -80 }    // Right side of forest, slightly north
     ]
     
-    for (let i = 0; i < birdCount && i < birdHabitats.length; i++) {
-      const habitat = birdHabitats[i]
-      const bird = this.add.image(
-        centerX + 750 + habitat.x, centerY + 270 + habitat.y,  // Updated position
-        habitat.type
-      ).setScale(0.05)
+    forestKiwiPositions.forEach((pos, index) => {
+      const forestKiwi = this.add.image(
+        centerX + 550 + pos.x, centerY + 170 + pos.y,
+        'kiwi-icon'
+      ).setScale(0.06)  // Same size as grassland kiwi
        .setOrigin(0.5)
-       .setDepth(5)
+       .setDepth(5)     // Above trees and background, below UI
+       .setAlpha(0.9)
       
-      // Add flying animation with random delays
-      const birdTween = this.tweens.add({
-        targets: bird,
-        y: bird.y - Phaser.Math.Between(5, 12),
-        duration: Phaser.Math.Between(1200, 2000),
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-        delay: Phaser.Math.Between(0, 1000)
-      })
+      console.log(`✅ Forest Kiwi ${index + 1} added at:`, forestKiwi.x, forestKiwi.y)
+    })
+    
+    // Add two tuatara lizards in the forest sanctuary
+    const forestTuataraPositions = [
+      { x: -200, y: -150 },   // Center-left of forest, moved left 150px and up 200px
+      { x: -30, y: -180 }     // Right side of forest, moved left 150px and up 200px
+    ]
+    
+    forestTuataraPositions.forEach((pos, index) => {
+      const forestTuatara = this.add.image(
+        centerX + 750 + pos.x, centerY + 270 + pos.y,
+        'tuatara-icon'
+      ).setScale(0.07)  // Slightly larger than kiwi
+       .setOrigin(0.5)
+       .setDepth(5)     // Same depth as kiwi birds
+       .setAlpha(0.9)
       
-      // Store reference for cleanup
-      this.birdTweens.push(birdTween)
-    }
+      console.log(`✅ Forest Tuatara ${index + 1} added at:`, forestTuatara.x, forestTuatara.y)
+    })
+    
+    // Forest now has kiwi birds and tuatara lizards as native inhabitants
+    // (All penguins belong in ocean only)
     
     // Island labels with updated names
     this.add.text(centerX - 300, centerY + 220, 'GRASSLAND', {
@@ -309,7 +451,7 @@ export class EcoGameScene extends Phaser.Scene {
       strokeThickness: 3
     }).setOrigin(0.5).setDepth(6)
     
-    this.add.text(centerX + 750, centerY + 470, 'FOREST SANCTUARY', {  // Updated position
+    this.add.text(centerX + 600, centerY + 370, 'FOREST', {  // Moved left 150px (-150) and up 100px (-100)
       fontSize: '18px', 
       color: '#00ff00',
       fontStyle: 'bold',
@@ -380,9 +522,9 @@ export class EcoGameScene extends Phaser.Scene {
     
     // Action buttons
     const buttons = [
-      { text: '🌳 Plant Tree', action: 'plant', cost: 'Env -5, Birds +10' },
-      { text: '🪓 Cut Tree', action: 'cut', cost: 'Env +5, Birds -15' },
-      { text: '🍎 Feed Birds', action: 'feed', cost: 'Birds +5' }
+      { text: ' Plant Tree', action: 'plant', cost: 'Env -5, Birds +10' },
+      { text: ' Cut Tree', action: 'cut', cost: 'Env +5, Birds -15' },
+      { text: ' Feed Birds', action: 'feed', cost: 'Birds +5' }
     ]
     
     buttons.forEach(btn => {
@@ -476,19 +618,19 @@ export class EcoGameScene extends Phaser.Scene {
     
     this.scorePanel.innerHTML = `
       <div style="margin-bottom: 10px; font-weight: bold; color: #4CAF50;">
-        🎮 Eco Game - ${this.animal?.name || 'Kakapo'}
+        ${this.animal?.name || 'Save the Kakapo'}
       </div>
       <div style="margin-bottom: 5px;">
-        🦜 Bird Population: ${this.birdPopulation}
+         Bird Population: ${this.birdPopulation}
       </div>
       <div style="margin-bottom: 5px;">
-        🌍 Environment: ${this.environmentScore}
+         Environment: ${this.environmentScore}
       </div>
       <div style="margin-bottom: 5px;">
-        🌳 Trees: ${this.trees}
+         Trees: ${this.trees}
       </div>
       <div style="margin-bottom: 5px;">
-        🐺 Predators: ${this.predators}
+         Predators: ${this.predators}
       </div>
       <div style="margin-top: 10px; font-weight: bold;">
         Status: ${kakapoStatus}
@@ -563,24 +705,32 @@ export class EcoGameScene extends Phaser.Scene {
     const centerX = this.scale.width / 2
     const centerY = this.scale.height / 2
     
-    // Forest island center (updated position)
-    const forestCenterX = centerX + 750
-    const forestCenterY = centerY + 270
+    // Forest island center (moved left 200px for kakapo safety zone)
+    const forestCenterX = centerX + 750 - 200  // Moved left 200px
+    const forestCenterY = centerY + 170
     
     // Use approximate bounding box for the irregular forest island
     // Based on the polygon points, create a safe zone
     const kakapoX = this.kakapo.x
     const kakapoY = this.kakapo.y
     
-    // Define safe zone boundaries based on the updated forest polygon
-    const leftBound = forestCenterX - 260   // -260 from polygon (smaller island)
-    const rightBound = forestCenterX + 260  // +260 from polygon  
-    const topBound = forestCenterY - 180    // -180 from polygon
-    const bottomBound = forestCenterY + 170 // +170 from polygon
+    // Define safe zone boundaries based on the actual forest polygon
+    // Using the same coordinate system as the forest island creation
+    const leftBound = forestCenterX - 240   // -240 from polygon points (leftmost point)
+    const rightBound = forestCenterX + 260  // +260 from polygon points (rightmost point)
+    const topBound = forestCenterY - 180    // -180 from polygon points (topmost point)
+    const bottomBound = forestCenterY + 170 // +170 from polygon points (bottommost point)
+    
+    console.log(`🔍 Kakapo position: (${kakapoX}, ${kakapoY})`)
+    console.log(`🔍 Forest boundaries: Left=${leftBound}, Right=${rightBound}, Top=${topBound}, Bottom=${bottomBound}`)
     
     // Check if kakapo is within the forest island boundaries
-    return kakapoX >= leftBound && kakapoX <= rightBound && 
-           kakapoY >= topBound && kakapoY <= bottomBound
+    const isSafe = kakapoX >= leftBound && kakapoX <= rightBound && 
+                   kakapoY >= topBound && kakapoY <= bottomBound
+    
+    console.log(`🔍 Kakapo is ${isSafe ? 'SAFE' : 'NOT SAFE'} in forest`)
+    
+    return isSafe
   }
 
   private checkKakapoSafety() {
@@ -590,10 +740,68 @@ export class EcoGameScene extends Phaser.Scene {
       this.showFeedback('🟢 Kakapo is safe! Birds +2, Environment +1', '#4CAF50')
       this.birdPopulation = Math.min(100, this.birdPopulation + 2)
       this.environmentScore = Math.min(100, this.environmentScore + 1)
+      
+      // Spawn 2 more kakapo animals in forest when reaching safe zone (only once)
+      if (!this.hasSpawnedAnimals) {
+        this.spawnForestKakapos()
+        this.hasSpawnedAnimals = true
+        this.showFeedback('🎉 Two more kakapos appeared in the forest!', '#FFD700')
+      }
     } else {
       this.showFeedback('🔴 Kakapo is in danger! Birds -3', '#ff4444')
       this.birdPopulation = Math.max(0, this.birdPopulation - 3)
     }
+  }
+
+  private spawnForestKakapos() {
+    const centerX = this.scale.width / 2
+    const centerY = this.scale.height / 2
+    
+    // Forest island center
+    const forestCenterX = centerX + 750
+    const forestCenterY = centerY + 170
+    
+    // Define positions for 2 new kakapos in forest, avoiding existing animals and trees
+    const kakapoPositions = [
+      { x: -50 - 310, y:0 },   // South area of forest, moved left 230px and up 170px
+      { x: 120 - 330, y: -120  }   // North-east area of forest, moved left 230px and up 170px
+    ]
+    
+    kakapoPositions.forEach((pos, index) => {
+      // Create kakapo sprite
+      const newKakapo = this.add.image(
+        forestCenterX + pos.x, forestCenterY + pos.y,
+        'kakapo-icon'
+      ).setScale(0.08)  // Same size as main kakapo
+       .setOrigin(0.5)
+       .setDepth(6)     // Above trees and other animals
+       .setAlpha(0)     // Start invisible
+       .setTint(0x90EE90)  // Light green tint to distinguish from player kakapo
+      
+      // Add 1-second delayed fade-in animation
+      this.tweens.add({
+        targets: newKakapo,
+        alpha: 0.9,
+        duration: 1000,
+        ease: 'Power2.easeOut',
+        delay: index * 200  // Stagger the appearance by 200ms for each kakapo
+      })
+      
+      // Add gentle animation to make them feel alive (starts after fade-in)
+      this.tweens.add({
+        targets: newKakapo,
+        y: newKakapo.y + Phaser.Math.Between(-10, 10),
+        duration: Phaser.Math.Between(2000, 3000),
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+        delay: 1000 + Phaser.Math.Between(0, 1000)  // Start after fade-in completes
+      })
+      
+      console.log(`✅ Spawned Kakapo ${index + 1} at:`, newKakapo.x, newKakapo.y)
+    })
+    
+    console.log('🎉 Two new kakapos spawned in forest sanctuary!')
   }
 
   private handleAction(action: string) {
@@ -603,7 +811,7 @@ export class EcoGameScene extends Phaser.Scene {
           this.trees++
           this.environmentScore -= 5
           this.birdPopulation = Math.min(100, this.birdPopulation + 10)
-          this.showFeedback('🌳 Tree planted! Birds love it!', '#4CAF50')
+          this.showFeedback(' Tree planted! Birds love it!', '#4CAF50')
           this.refreshIslands()
         } else {
           this.showFeedback('❌ Not enough environmental resources!', '#ff4444')
@@ -615,7 +823,7 @@ export class EcoGameScene extends Phaser.Scene {
           this.trees--
           this.environmentScore = Math.min(100, this.environmentScore + 5)
           this.birdPopulation = Math.max(0, this.birdPopulation - 15)
-          this.showFeedback('🪓 Tree cut! Birds lost habitat!', '#ff8800')
+          this.showFeedback(' Tree cut! Birds lost habitat!', '#ff8800')
           this.refreshIslands()
         } else {
           this.showFeedback('❌ No trees to cut!', '#ff4444')
@@ -624,7 +832,7 @@ export class EcoGameScene extends Phaser.Scene {
         
       case 'feed':
         this.birdPopulation = Math.min(100, this.birdPopulation + 5)
-        this.showFeedback('🍎 Birds fed! Population increased!', '#4CAF50')
+        this.showFeedback(' Birds fed! Population increased!', '#4CAF50')
         break
     }
     
