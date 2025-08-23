@@ -69,7 +69,6 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   private createTitle() {
-    // 主标题
     this.titleText = this.add.text(
       this.cameras.main.centerX,
       this.cameras.main.height * 0.2,
@@ -85,7 +84,6 @@ export class MainMenuScene extends Phaser.Scene {
     this.titleText.setOrigin(0.5)
     this.titleText.setShadow(4, 4, "#1a1a2e", 8, true, true)
 
-    // 副标题
     const subtitle = this.add.text(
       this.cameras.main.centerX,
       this.cameras.main.height * 0.28,
@@ -105,25 +103,22 @@ export class MainMenuScene extends Phaser.Scene {
     const centerX = this.cameras.main.centerX
     const centerY = this.cameras.main.centerY
 
-    // 背包按钮 - 左侧，考虑按钮宽度260px + 50px间距
     this.backpackButton = this.createPixelButton(
-      centerX - 185, // (260/2 + 25) = 155px 偏移
-      centerY + 200, // 增加Y偏移量以增加与标题的间距（3倍）
+      centerX - 185,
+      centerY + 200,
       "Collection",
       0x4CAF50,
       () => this.openBackpack()
     )
 
-    // 地图按钮 - 右侧，考虑按钮宽度260px + 50px间距
     this.mapButton = this.createPixelButton(
-      centerX + 185, // (260/2 + 25) = 155px 偏移
-      centerY + 200, // 增加Y偏移量以增加与标题的间距（3倍）
+      centerX + 185,
+      centerY + 200,
       "Explore Map",
       0x2196F3,
       () => this.openMap()
     )
 
-    // 为按钮添加统计信息
     this.updateButtonStats()
   }
 

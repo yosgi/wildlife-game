@@ -115,7 +115,6 @@ export class BackpackScene extends Phaser.Scene {
   }
 
   private createDOMContainer() {
-    // 创建主DOM容器
     this.domContainer = document.createElement('div')
     this.domContainer.id = 'backpack-scene'
     this.domContainer.style.cssText = `
@@ -151,7 +150,6 @@ export class BackpackScene extends Phaser.Scene {
       -webkit-overflow-scrolling: touch;
     `
     
-    // 添加像素风格CSS - 移动端优化
     const pixelStyle = document.createElement('style')
     pixelStyle.textContent = `
       .pixel-btn {
@@ -255,12 +253,10 @@ export class BackpackScene extends Phaser.Scene {
     `
     document.head.appendChild(pixelStyle)
     
-    // 添加到body
     document.body.appendChild(this.domContainer)
   }
 
   private createBackground() {
-    // Phaser背景保持简单
     const bg = this.add.rectangle(
       this.cameras.main.centerX,
       this.cameras.main.centerY,
@@ -395,7 +391,6 @@ export class BackpackScene extends Phaser.Scene {
 
     const isMobile = window.innerWidth < 768
 
-    // 筛选和排序控件 - 移动端优化
     const controlsHTML = `
       <div style="background: rgba(42, 42, 62, 0.9); padding: ${isMobile ? '20px' : '20px'}; border: 4px solid #4CAF50; margin-bottom: 30px; box-shadow: 8px 8px 0 rgba(76, 175, 80, 0.3);">
         <div class="controls-container" style="display: flex; flex-direction: column; gap: ${isMobile ? '16px' : '20px'};">
@@ -492,32 +487,25 @@ export class BackpackScene extends Phaser.Scene {
     const allAnimals = this.getAllAnimalsForDisplay()
     const capturedAnimals = this.gameManager.getGameState().getCapturedAnimals()
 
-    // Create cards for all animals (including uncollected ones)
     animalsGrid.innerHTML = allAnimals.map(animal => {
       const isCaptured = capturedAnimals.some((captured: Animal) => captured.id === animal.id)
       const capturedAnimal = isCaptured ? capturedAnimals.find((captured: Animal) => captured.id === animal.id) : null
-      
       return isCaptured 
         ? this.createAnimalCardHTML(capturedAnimal!)
         : this.createUnknownAnimalCardHTML(animal)
     }).join('')
 
-    // Add card click events
     animalsGrid.querySelectorAll('.animal-card').forEach(card => {
       card.addEventListener('click', (e) => {
         const animalId = (e.currentTarget as HTMLElement).dataset.animalId
         const isCaptured = (e.currentTarget as HTMLElement).dataset.captured === 'true'
-        
-        // Mobile haptic feedback
         this.safeVibrate(50)
-        
         if (isCaptured) {
           const animal = capturedAnimals.find((a: Animal) => a.id === animalId)
           if (animal) {
             this.selectAnimal(animal)
           }
         } else {
-          // Show uncollected hint
           this.showFeedback('❓ This animal has not been discovered yet, continue exploring!')
         }
       })
@@ -942,14 +930,10 @@ export class BackpackScene extends Phaser.Scene {
   }
 
   private feedAnimal(animal: Animal) {
-    // 简单的喂食逻辑
     animal.intimacyLevel = Math.min(animal.intimacyLevel + 1, 10)
     animal.lastFed = new Date()
-    
     this.closeModal()
-    this.loadAnimals() // 刷新显示
-    
-    // 显示反馈
+    this.loadAnimals()
     this.showFeedback(`🍎 ${animal.name} is happy! Intimacy +1`)
   }
 
@@ -976,9 +960,7 @@ export class BackpackScene extends Phaser.Scene {
       word-wrap: break-word;
     `
     feedback.textContent = message
-
     document.body.appendChild(feedback)
-
     setTimeout(() => {
       if (feedback.parentNode) {
         document.body.removeChild(feedback)
@@ -987,20 +969,16 @@ export class BackpackScene extends Phaser.Scene {
   }
 
   private exitBackpack() {
-    // 清理DOM元素
     if (this.domContainer && this.domContainer.parentNode) {
       this.domContainer.parentNode.removeChild(this.domContainer)
     }
     if (this.modalElement && this.modalElement.parentNode) {
       this.modalElement.parentNode.removeChild(this.modalElement)
     }
-    
-    // 返回主菜单场景
     this.scene.start("MainMenuScene")
   }
 
   destroy() {
-    // 场景销毁时清理DOM
     this.exitBackpack()
   }
 
@@ -1011,32 +989,19 @@ export class BackpackScene extends Phaser.Scene {
   }
 
   private startMiniGame(animal: Animal) {
-    console.log('startMiniGame called with animal:', animal?.name)
-    console.log('Current scene key:', this.scene.key)
-    
     this.closeModal()
-    
-    // Use setTimeout to ensure modal cleanup is complete
     setTimeout(() => {
       try {
-        // Navigate to the EcoGame scene with animal data
-        console.log('Starting EcoGameScene...')
-        console.log('Available scenes:', this.scene.manager.scenes.map(s => s.scene.key))
-        
-        // Pause this scene and start the new one
         this.scene.pause("BackpackScene")
         this.scene.launch("EcoGameScene", { 
           animal: animal,
           gameManager: this.gameManager 
         })
-        
-        // Hide this scene's DOM
         setTimeout(() => {
           if (this.domContainer) {
             this.domContainer.style.display = 'none'
           }
         }, 100)
-        console.log('EcoGameScene start command sent')
       } catch (error) {
         console.error('Error starting EcoGameScene:', error)
       }
@@ -1059,12 +1024,9 @@ export class BackpackScene extends Phaser.Scene {
   private getFilteredAndSortedAnimals(): Animal[] {
     let animals = this.gameManager.getGameState().getCapturedAnimals()
 
-    // 筛选
     if (this.filterMode !== "all") {
       animals = animals.filter((animal: Animal) => animal.region === this.filterMode || animal.region === "both")
     }
-
-    // 排序
     animals.sort((a: Animal, b: Animal) => {
       switch (this.sortMode) {
         case "name":
@@ -1079,32 +1041,26 @@ export class BackpackScene extends Phaser.Scene {
           return 0
       }
     })
-
     return animals
   }
 
   private getAllAnimalsForDisplay(): Animal[] {
     let allAnimals = this.gameManager.getGameState().getAllAnimals()
 
-    // 筛选
     if (this.filterMode !== "all") {
       allAnimals = allAnimals.filter((animal: Animal) => animal.region === this.filterMode || animal.region === "both")
     }
-
-    // 排序（按名称排序以保持一致的顺序）
     allAnimals.sort((a: Animal, b: Animal) => {
       switch (this.sortMode) {
         case "name":
           return a.name.localeCompare(b.name)
         case "intimacy":
         case "recent":
-          // 对于未收集的动物，也按名称排序
           return a.name.localeCompare(b.name)
         default:
           return a.name.localeCompare(b.name)
       }
     })
-
     return allAnimals
   }
 }

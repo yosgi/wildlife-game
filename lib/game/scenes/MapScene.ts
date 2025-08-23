@@ -170,14 +170,14 @@ export class MapScene extends Phaser.Scene {
     const centerX = this.cameras.main.centerX
     const centerY = this.cameras.main.centerY
 
-    // 创建整个新西兰地图作为背景
+    // Create the full New Zealand map as background
     const fullMap = this.add
-      .image(centerX, centerY, "north-island") // 使用其中一个作为完整地图
+      .image(centerX, centerY, "north-island")
       .setScale(1.2)
       .setDepth(2)
       .setAlpha(0.8)
 
-    // 创建北岛选择区域 - 调整间距为50px
+    // North Island selection area
     const northButton = this.add
       .rectangle(centerX - 25, centerY - 40, 160, 80, 0x4caf50, 0.7)
       .setStrokeStyle(3, 0xffffff)
@@ -212,7 +212,7 @@ export class MapScene extends Phaser.Scene {
       this.hideRegionInfo()
     })
 
-    // 创建南岛选择区域 - 调整间距为50px
+    // South Island selection area
     const southButton = this.add
       .rectangle(centerX + 25, centerY + 60, 160, 100, 0x2196f3, 0.7)
       .setStrokeStyle(3, 0xffffff)
@@ -247,7 +247,7 @@ export class MapScene extends Phaser.Scene {
       this.hideRegionInfo()
     })
 
-    // 添加标签 - 调整位置对应新的按钮位置
+    // Add labels
     this.add
       .text(centerX - 25, centerY - 40, "North Island", {
         fontSize: "16px",
@@ -272,7 +272,6 @@ export class MapScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(10)
 
-    // 存储引用
     this.northIsland = northButton as any
     this.southIsland = southButton as any
   }
@@ -283,10 +282,8 @@ export class MapScene extends Phaser.Scene {
     const isMobile = this.cameras.main.width < 768
 
     const habitats = [
-      // 北岛动物 - 调整位置对应新的按钮位置
       { x: centerX - 45, y: centerY - 80, animal: "kiwi", region: "north" },
       { x: centerX - 5, y: centerY - 20, animal: "tuatara", region: "north" },
-      // 南岛动物 - 调整位置对应新的按钮位置
       { x: centerX + 5, y: centerY + 40, animal: "kakapo", region: "south" },
       { x: centerX + 45, y: centerY + 80, animal: "penguin", region: "south" },
     ]

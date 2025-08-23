@@ -326,11 +326,8 @@ export class ARScene extends Phaser.Scene {
       return // Already created
     }
 
-    // Create speech bubble container
     this.speechBubble = document.createElement('div')
     this.speechBubble.id = 'speech-bubble'
-    
-    // Apply CSS styles
     this.speechBubble.style.cssText = `
       position: absolute;
       top: 0%;
@@ -353,8 +350,6 @@ export class ARScene extends Phaser.Scene {
       transition: opacity 0.3s ease;
       white-space: pre-line;
     `
-
-    // Add speech bubble tail (CSS triangle)
     const tail = document.createElement('div')
     tail.style.cssText = `
       position: absolute;
@@ -367,8 +362,6 @@ export class ARScene extends Phaser.Scene {
       border-right: 10px solid transparent;
       border-top: 10px solid #4CAF50;
     `
-
-    // Add inner tail for the background
     const innerTail = document.createElement('div')
     innerTail.style.cssText = `
       position: absolute;
@@ -381,33 +374,23 @@ export class ARScene extends Phaser.Scene {
       border-right: 8px solid transparent;
       border-top: 8px solid rgba(255, 255, 255, 0.95);
     `
-
-    // Add content
     const content = document.createElement('div')
     content.innerHTML = `
       <div style="font-weight: bold; color: #4CAF50; margin-bottom: 5px;">🦜 Kakapo</div>
       <div>Hello! I'm a kakapo parrot. Click the chat button to talk with me!</div>
     `
-
     this.speechBubble.appendChild(content)
     this.speechBubble.appendChild(tail)
     this.speechBubble.appendChild(innerTail)
-
-    // Add to the body
     document.body.appendChild(this.speechBubble)
-
-    // Animate in
     setTimeout(() => {
       if (this.speechBubble) {
         this.speechBubble.style.opacity = '1'
       }
     }, 500)
-
-    // Auto hide after 5 seconds
     setTimeout(() => {
       this.hideSpeechBubble()
     }, 5000)
-
     console.log('Speech bubble created')
   }
 
@@ -416,8 +399,6 @@ export class ARScene extends Phaser.Scene {
       this.createSpeechBubble()
       return
     }
-
-    // Update content
     const content = this.speechBubble.querySelector('div')
     if (content) {
       content.innerHTML = `
@@ -425,11 +406,7 @@ export class ARScene extends Phaser.Scene {
         <div>${message}</div>
       `
     }
-
-    // Show bubble
     this.speechBubble.style.opacity = '1'
-    
-    // Auto hide after 4 seconds
     setTimeout(() => {
       this.hideSpeechBubble()
     }, 4000)

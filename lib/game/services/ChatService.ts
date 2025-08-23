@@ -18,7 +18,6 @@ export class ChatService {
   }
 
   async chatWithAnimal(animal: Animal, userMessage: string): Promise<string> {
-    // Add user message to history
     this.addMessage("user", userMessage)
 
     if (!this.apiKey) {
@@ -29,31 +28,30 @@ export class ChatService {
 
     try {
       const conversationContext = this.buildConversationContext(animal)
-      
-      const prompt = `你是一只名叫${animal.name}的${animal.species}，生活在新西兰的${animal.habitat}。
+      const prompt = `You are a ${animal.species} named ${animal.name}, living in the ${animal.habitat} of New Zealand.
 
-角色特征：
-- 保护状态: ${animal.conservationStatus}
-- 食物: ${animal.diet.join(", ")}
-- 描述: ${animal.description}
-- 亲密度等级: ${animal.intimacyLevel}
+Character traits:
+- Conservation status: ${animal.conservationStatus}
+- Diet: ${animal.diet.join(", ")}
+- Description: ${animal.description}
+- Intimacy level: ${animal.intimacyLevel}
 
-角色设定：
-- 你是一只友好、聪明的${animal.name}
-- 你喜欢和人类交流，但保持动物的天性
-- 你了解新西兰的自然环境和生态
-- 你关心保护和环境问题
-- 根据亲密度等级调整友好程度（等级越高越亲密）
-- 用第一人称说话，像一只真正的动物
-- 回答要有趣、教育性，适合与儿童对话
-- 回答长度控制在100字以内
+Character settings:
+- You are a friendly and smart ${animal.name}
+- You like to communicate with humans, but keep your animal nature
+- You know about New Zealand's natural environment and ecology
+- You care about conservation and environmental issues
+- Adjust friendliness according to intimacy level (the higher the level, the closer)
+- Speak in first person, like a real animal
+- Answers should be fun and educational, suitable for children
+- Keep answers under 100 words
 
-对话历史：
+Conversation history:
 ${conversationContext}
 
-用户说: ${userMessage}
+User says: ${userMessage}
 
-请以${animal.name}的身份回复，用中文回答：`
+Please reply as ${animal.name}, in English:`
 
       const { text } = await generateText({
         model: openai("gpt-4o"),
@@ -89,29 +87,27 @@ ${conversationContext}
   }
 
   private buildConversationContext(animal: Animal): string {
-    if (this.chatHistory.length === 0) return "这是你们第一次对话。"
-    
+    if (this.chatHistory.length === 0) return "This is your first conversation."
     return this.chatHistory
-      .slice(-6) // Last 6 messages for context
-      .map(msg => `${msg.sender === "user" ? "用户" : animal.name}: ${msg.message}`)
+      .slice(-6)
+      .map(msg => `${msg.sender === "user" ? "User" : animal.name}: ${msg.message}`)
       .join("\n")
   }
 
   private getFallbackResponse(animal: Animal, userMessage: string): string {
     const responses = [
-      `你好！我是${animal.name}，很高兴见到你！我生活在${animal.habitat}。`,
-      `作为一只${animal.species}，我最喜欢吃${animal.diet[0] || "各种食物"}了！`,
-      `你知道吗？我们${animal.name}的保护状态是${animal.conservationStatus}，需要大家的保护哦！`,
-      `${animal.description}这就是我们的特点！`,
-      `我很喜欢和你聊天！你还想了解什么关于我的事情吗？`
+      `Hello! I'm ${animal.name}, nice to meet you! I live in the ${animal.habitat}.`,
+      `As a ${animal.species}, my favorite food is ${animal.diet[0] || "various foods"}!`,
+      `Did you know? Our conservation status is ${animal.conservationStatus}, we need everyone's help!`,
+      `${animal.description} That's what makes us special!`,
+      `I love chatting with you! Do you want to know more about me?`
     ]
 
-    // Simple keyword matching for fallback
-    if (userMessage.includes("你好") || userMessage.includes("hi")) {
+    if (userMessage.includes("hello") || userMessage.includes("hi")) {
       return responses[0]
-    } else if (userMessage.includes("吃") || userMessage.includes("食物")) {
+    } else if (userMessage.includes("eat") || userMessage.includes("food")) {
       return responses[1]
-    } else if (userMessage.includes("保护") || userMessage.includes("环境")) {
+    } else if (userMessage.includes("conservation") || userMessage.includes("environment")) {
       return responses[2]
     } else {
       return responses[Math.floor(Math.random() * responses.length)]
